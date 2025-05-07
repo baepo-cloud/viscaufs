@@ -2,7 +2,7 @@
 GRPC localhost:8080/baepo.viscaufs.fs.v1.FuseService/PrepareImage
 
 {
-  "image_ref": "gitlab/gitlab-ce:latest"
+  "image_ref": "gitlab/node:latest"
 }
 
 

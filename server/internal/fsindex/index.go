@@ -73,15 +73,15 @@ func collectFileAttributes(info os.FileInfo) FileAttributes {
 	return FileAttributes{
 		Inode:     stat.Ino,
 		Size:      info.Size(),
-		Blocks:    uint64(stat.Blocks),
-		Atime:     uint64(stat.Atimespec.Sec),
-		Atimensec: uint32(stat.Atimespec.Nsec),
-		Mtime:     uint64(stat.Mtimespec.Sec),
-		Mtimensec: uint32(stat.Mtimespec.Nsec),
-		Ctime:     uint64(stat.Ctimespec.Sec),
-		Ctimensec: uint32(stat.Ctimespec.Nsec),
-		Mode:      uint32(stat.Mode),
-		Nlink:     uint32(stat.Nlink),
+		Blocks:    stat.Blocks,
+		Atime:     stat.Atim.Sec,
+		Atimensec: stat.Atim.Nsec,
+		Mtime:     stat.Mtim.Sec,
+		Mtimensec: stat.Mtim.Nsec,
+		Ctime:     stat.Ctim.Sec,
+		Ctimensec: stat.Ctim.Nsec,
+		Mode:      stat.Mode,
+		Nlink:     stat.Nlink,
 		Owner: struct {
 			Uid uint32
 			Gid uint32
@@ -89,8 +89,8 @@ func collectFileAttributes(info os.FileInfo) FileAttributes {
 			Uid: stat.Uid,
 			Gid: stat.Gid,
 		},
-		Rdev:    uint32(stat.Rdev),
-		Blksize: uint32(stat.Blksize),
+		Rdev:    stat.Rdev,
+		Blksize: stat.Blksize,
 	}
 }
 

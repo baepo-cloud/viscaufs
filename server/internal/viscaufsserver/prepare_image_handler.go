@@ -3,6 +3,7 @@ package viscaufsserver
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
@@ -16,6 +17,7 @@ func (s Server) PrepareImage(_ context.Context, request *fspb.PrepareImageReques
 		switch {
 		case errors.Is(err, types.ErrImageAlreadyPresent), errors.Is(err, types.ErrImageDownloadAlreadyAcquired):
 		default:
+			slog.Error("unable to retrieve image", "error", err)
 			return nil, status.Error(codes.Internal, "unable to download image")
 		}
 	}

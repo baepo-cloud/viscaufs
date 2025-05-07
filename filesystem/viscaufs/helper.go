@@ -7,23 +7,23 @@ import (
 
 func AttrFromProto(attr *fuse.Attr, pbAttr *fspb.FileAttributes) {
 	attr.Mode = pbAttr.Mode
-	attr.Size = pbAttr.Size
-	attr.Blocks = pbAttr.Blocks
+	attr.Size = uint64(pbAttr.Size)
+	attr.Blocks = uint64(pbAttr.Blocks)
 
 	// Time values
-	attr.Atime = pbAttr.Atime
-	attr.Mtime = pbAttr.Mtime
-	attr.Ctime = pbAttr.Ctime
+	attr.Atime = uint64(pbAttr.Atime)
+	attr.Mtime = uint64(pbAttr.Mtime)
+	attr.Ctime = uint64(pbAttr.Ctime)
 	attr.Atimensec = uint32(pbAttr.Atimensec)
 	attr.Mtimensec = uint32(pbAttr.Mtimensec)
 	attr.Ctimensec = uint32(pbAttr.Ctimensec)
 
 	// Other attributes
-	attr.Nlink = pbAttr.Nlink
+	attr.Nlink = uint32(pbAttr.Nlink)
 	attr.Uid = pbAttr.Uid
 	attr.Gid = pbAttr.Gid
 	attr.Rdev = uint32(pbAttr.Rdev)
-	attr.Blksize = pbAttr.Blksize
+	attr.Blksize = uint32(pbAttr.Blksize)
 
 	// Set inode number if available
 	if pbAttr.Inode > 0 {

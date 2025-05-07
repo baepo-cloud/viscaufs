@@ -17,21 +17,21 @@ type FSNode struct {
 type FileAttributes struct {
 	Inode     uint64
 	Size      int64
-	Blocks    uint64
-	Atime     uint64
-	Mtime     uint64
-	Ctime     uint64
-	Atimensec uint32
-	Mtimensec uint32
-	Ctimensec uint32
+	Blocks    int64
+	Atime     int64
+	Mtime     int64
+	Ctime     int64
+	Atimensec int64
+	Mtimensec int64
+	Ctimensec int64
 	Mode      uint32
-	Nlink     uint32
+	Nlink     uint64
 	Owner     struct {
 		Uid uint32
 		Gid uint32
 	}
-	Rdev    uint32
-	Blksize uint32
+	Rdev    uint64
+	Blksize int64
 }
 
 // FSIndex represents our optimized filesystem index
@@ -51,19 +51,19 @@ func (f *FSNode) ToProto() *fspb.FSNode {
 		Path: f.Path,
 		Attributes: &fspb.FileAttributes{
 			Inode:     f.Attributes.Inode,
-			Size:      uint64(f.Attributes.Size),
+			Size:      f.Attributes.Size,
 			Blocks:    f.Attributes.Blocks,
 			Atime:     f.Attributes.Atime,
 			Mtime:     f.Attributes.Mtime,
 			Ctime:     f.Attributes.Ctime,
-			Atimensec: uint64(f.Attributes.Atimensec),
-			Mtimensec: uint64(f.Attributes.Mtimensec),
-			Ctimensec: uint64(f.Attributes.Ctimensec),
+			Atimensec: f.Attributes.Atimensec,
+			Mtimensec: f.Attributes.Mtimensec,
+			Ctimensec: f.Attributes.Ctimensec,
 			Mode:      f.Attributes.Mode,
 			Nlink:     f.Attributes.Nlink,
 			Uid:       f.Attributes.Owner.Uid,
 			Gid:       f.Attributes.Owner.Gid,
-			Rdev:      uint64(f.Attributes.Rdev),
+			Rdev:      f.Attributes.Rdev,
 			Blksize:   f.Attributes.Blksize,
 		},
 		LayerPosition: uint32(f.LayerPosition),
@@ -75,14 +75,14 @@ func FSNodeFromProto(node *fspb.FSNode) *FSNode {
 		Path: node.Path,
 		Attributes: FileAttributes{
 			Inode:     node.Attributes.Inode,
-			Size:      int64(node.Attributes.Size),
+			Size:      node.Attributes.Size,
 			Blocks:    node.Attributes.Blocks,
 			Atime:     node.Attributes.Atime,
 			Mtime:     node.Attributes.Mtime,
 			Ctime:     node.Attributes.Ctime,
-			Atimensec: uint32(node.Attributes.Atimensec),
-			Mtimensec: uint32(node.Attributes.Mtimensec),
-			Ctimensec: uint32(node.Attributes.Ctimensec),
+			Atimensec: node.Attributes.Atimensec,
+			Mtimensec: node.Attributes.Mtimensec,
+			Ctimensec: node.Attributes.Ctimensec,
 			Mode:      node.Attributes.Mode,
 			Nlink:     node.Attributes.Nlink,
 			Owner: struct {
@@ -92,7 +92,7 @@ func FSNodeFromProto(node *fspb.FSNode) *FSNode {
 				Uid: node.Attributes.Uid,
 				Gid: node.Attributes.Gid,
 			},
-			Rdev:    uint32(node.Attributes.Rdev),
+			Rdev:    node.Attributes.Rdev,
 			Blksize: node.Attributes.Blksize,
 		},
 		LayerPosition: uint8(node.LayerPosition),
