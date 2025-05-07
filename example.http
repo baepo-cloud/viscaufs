@@ -1,0 +1,14 @@
+###
+GRPC localhost:8080/baepo.viscaufs.fs.v1.FuseService/PrepareImage
+
+{
+  "image_ref": "gitlab/gitlab-ce:latest"
+}
+
+
+###
+GRPC localhost:8080/baepo.viscaufs.fs.v1.FuseService/ImageReady
+
+{
+  "image_digest": "sha256:16b97bfd05a98aff1d1f49804a325540bdba39600120f6f963ac5417347ecf55"
+}

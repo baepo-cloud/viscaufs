@@ -1,0 +1,176 @@
+package fsindex
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"syscall"
+
+	art "github.com/plar/go-adaptive-radix-tree/v2"
+)
+
+// NewFSIndex creates a new filesystem index
+func NewFSIndex() *FSIndex {
+	return &FSIndex{
+		trie:         art.New(),
+		withoutFiles: make(map[string]struct{}),
+		withoutDirs:  make(map[string]struct{}),
+	}
+}
+
+// AddPath adds a relative path to the index
+func (idx *FSIndex) AddPath(relPath string, info os.FileInfo) {
+	relPath = filepath.ToSlash(filepath.Clean(relPath))
+
+	node := &FSNode{
+		Path:       relPath,
+		Attributes: collectFileAttributes(info),
+	}
+
+	idx.trie.Insert(art.Key(relPath), node)
+
+	if strings.Contains(relPath, ".wh.") {
+		idx.withoutFiles[relPath] = struct{}{}
+	}
+
+	if strings.Contains(relPath, ".wh..wh.") {
+		idx.withoutDirs[relPath] = struct{}{}
+	}
+}
+
+// BuildIndex builds the index from a root directory
+func (idx *FSIndex) BuildIndex(rootDir string) error {
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to access path %q: %w", path, err)
+		}
+
+		relPath, relErr := filepath.Rel(rootDir, path)
+		if relErr != nil {
+			return fmt.Errorf("failed to compute relative path for %q: %w", path, relErr)
+		}
+
+		if relPath == "." {
+			return nil
+		}
+
+		idx.AddPath(relPath, info)
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to build index: %w", err)
+	}
+
+	return nil
+}
+
+func collectFileAttributes(info os.FileInfo) FileAttributes {
+	stat := info.Sys().(*syscall.Stat_t)
+
+	return FileAttributes{
+		Inode:     stat.Ino,
+		Size:      info.Size(),
+		Blocks:    uint64(stat.Blocks),
+		Atime:     uint64(stat.Atimespec.Sec),
+		Atimensec: uint32(stat.Atimespec.Nsec),
+		Mtime:     uint64(stat.Mtimespec.Sec),
+		Mtimensec: uint32(stat.Mtimespec.Nsec),
+		Ctime:     uint64(stat.Ctimespec.Sec),
+		Ctimensec: uint32(stat.Ctimespec.Nsec),
+		Mode:      uint32(stat.Mode),
+		Nlink:     uint32(stat.Nlink),
+		Owner: struct {
+			Uid uint32
+			Gid uint32
+		}{
+			Uid: stat.Uid,
+			Gid: stat.Gid,
+		},
+		Rdev:    uint32(stat.Rdev),
+		Blksize: uint32(stat.Blksize),
+	}
+}
+
+// LookupPath looks up a path in the index
+func (idx *FSIndex) LookupPath(path string) (*FSNode, error) {
+	path = filepath.ToSlash(filepath.Clean(path))
+
+	value, found := idx.trie.Search(art.Key(path))
+	if !found {
+		return nil, fmt.Errorf("path not found: %s", path)
+	}
+
+	node, ok := value.(*FSNode)
+	if !ok {
+		return nil, fmt.Errorf("invalid node type for path: %s", path)
+	}
+
+	return node, nil
+}
+
+// LookupPrefixSearch performs a prefix search on the index
+// Only returns immediate children (depth 1) of the given prefix
+func (idx *FSIndex) LookupPrefixSearch(prefix string) []*FSNode {
+	prefix = filepath.ToSlash(filepath.Clean(prefix))
+
+	// Ensure prefix ends with a slash if it's not empty
+	// This ensures we're looking for children of the directory
+	if prefix != "" && !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+
+	var results []*FSNode
+	prefixKey := art.Key(prefix)
+	prefixLen := len(prefix)
+
+	idx.trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
+		nodePath := string(node.Key())
+
+		// Skip the prefix node itself
+		if nodePath == prefix {
+			return true
+		}
+
+		// Calculate the relative path from the prefix
+		relPath := nodePath[prefixLen:]
+
+		// Only include direct children (no additional slashes in the relative path)
+		if !strings.Contains(relPath, "/") {
+			if fsNode, ok := node.Value().(*FSNode); ok {
+				results = append(results, fsNode)
+			}
+		}
+
+		return true
+	})
+
+	return results
+}
+
+// GetStats returns statistics about the index
+func (idx *FSIndex) GetStats() map[string]interface{} {
+	var totalFiles, totalDirs int
+
+	idx.trie.ForEach(func(node art.Node) (cont bool) {
+		val := node.Value()
+		if val == nil {
+			return true
+		}
+		if fsNode, ok := val.(*FSNode); ok {
+			if fsNode.IsDirectory() {
+				totalDirs++
+			} else {
+				totalFiles++
+			}
+		}
+		return true
+	})
+
+	return map[string]interface{}{
+		"total_files":       totalFiles,
+		"total_directories": totalDirs,
+	}
+}
