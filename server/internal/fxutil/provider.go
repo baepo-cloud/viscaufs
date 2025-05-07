@@ -13,6 +13,7 @@ import (
 	"github.com/baepo-cloud/viscaufs-server/internal/config"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
 	"github.com/baepo-cloud/viscaufs-server/internal/viscaufsserver"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 	"gorm.io/driver/sqlite"
@@ -21,7 +22,9 @@ import (
 )
 
 func ProvideGRPCServer(lc fx.Lifecycle, cfg *config.Config, server *viscaufsserver.Server) *grpc.Server {
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(logging.UnaryServerInterceptor(interceptorLogger(slog.Default()))),
+		grpc.ChainStreamInterceptor(logging.StreamServerInterceptor(interceptorLogger(slog.Default()))))
 	fspb.RegisterFuseServiceServer(grpcServer, server)
 
 	lc.Append(fx.Hook{
@@ -97,4 +100,12 @@ func ProvideGORM(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+// interceptorLogger adapts slog logger to interceptor logger.
+// This code is simple enough to be copied and not imported.
+func interceptorLogger(l *slog.Logger) logging.Logger {
+	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
+		l.Log(ctx, slog.Level(lvl), msg, fields...)
+	})
 }

@@ -23,6 +23,10 @@ func NewFSIndex() *FSIndex {
 func (idx *FSIndex) AddPath(relPath string, info os.FileInfo) {
 	relPath = filepath.ToSlash(filepath.Clean(relPath))
 
+	if !strings.HasPrefix(relPath, "/") {
+		relPath = "/" + relPath
+	}
+
 	node := &FSNode{
 		Path:       relPath,
 		Attributes: collectFileAttributes(info),

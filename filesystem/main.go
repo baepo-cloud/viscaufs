@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"github.com/hanwen/go-fuse/v2/fuse"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -31,6 +33,12 @@ func main() {
 	flag.BoolVar(&debug, "debug", true, "Enable debug logging")
 	flag.Parse()
 
+	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+
 	if imageDigest == "" {
 		slog.Error("image reference ID is required")
 		os.Exit(1)
@@ -47,26 +55,39 @@ func main() {
 
 	waitForImageReady(client, imageDigest, time.Second*10)
 
-	// Create the filesystem
+	// Create the filesystem object
 	vfs := &viscaufs.FS{
 		Client:      client,
 		ImageDigest: imageDigest,
 	}
 
+	// Create the root node directly
+	rootNode := &viscaufs.Node{
+		FS:   vfs,
+		Path: "/",
+	}
+
 	// Setup FUSE options
-	opts := &fs.Options{}
-	opts.Debug = debug
-	opts.MountOptions.Name = "viscaufs"
-	opts.MountOptions.FsName = "viscaufs"
-	opts.MountOptions.DisableXAttrs = true
+	opts := &fs.Options{
+		MountOptions: fuse.MountOptions{
+			Debug:         true,
+			Name:          "viscaufs",
+			FsName:        "viscaufs",
+			DisableXAttrs: true,
+		},
+	}
 
-	root := &viscaufs.Root{FileSystem: vfs}
+	fmt.Fprintf(os.Stderr, "DEBUG: About to mount filesystem at %s\n", mountPoint)
 
-	server, err := fs.Mount(mountPoint, root, opts)
+	// Mount the filesystem
+	server, err := fs.Mount(mountPoint, rootNode, opts)
 	if err != nil {
-		slog.Error("failed to mount filesystem", "error", err)
+		fmt.Fprintf(os.Stderr, "Mount failed: %v\n", err)
 		os.Exit(1)
 	}
+
+	fmt.Fprintf(os.Stderr, "DEBUG: Filesystem mounted successfully\n")
+	fmt.Println("mounted successfully")
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

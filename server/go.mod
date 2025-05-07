@@ -7,6 +7,7 @@ require (
 	github.com/amacneil/dbmate/v2 v2.27.0
 	github.com/baepo-cloud/viscaufs-common v0.0.0-00010101000000-000000000000
 	github.com/google/go-containerregistry v0.20.3
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/joho/godotenv v1.5.1
 	github.com/nrednav/cuid2 v1.0.1
 	github.com/pkg/errors v0.9.1
