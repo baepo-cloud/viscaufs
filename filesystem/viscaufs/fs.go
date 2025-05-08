@@ -30,6 +30,7 @@ var (
 	_ fs.NodeGetattrer = (*Node)(nil)
 	_ fs.NodeLookuper  = (*Node)(nil)
 	_ fs.NodeReaddirer = (*Node)(nil)
+	_ fs.NodeSymlinker = (*Node)(nil)
 )
 
 // Getattr implementation
@@ -76,15 +77,8 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 		Path: childPath,
 	}
 
-	var mode uint32 = syscall.S_IFREG
-	if (resp.Attributes.Mode & syscall.S_IFDIR) != 0 {
-		mode = syscall.S_IFDIR
-	} else if (resp.Attributes.Mode & syscall.S_IFLNK) != 0 {
-		mode = syscall.S_IFLNK
-	}
-
 	childInode := n.NewInode(ctx, child, fs.StableAttr{
-		Mode: mode,
+		Mode: resp.Attributes.Mode,
 		Ino:  resp.Attributes.Inode,
 	})
 
@@ -142,4 +136,10 @@ func (n *Node) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	}
 
 	return fs.NewListDirStream(entries), 0
+}
+
+func (n *Node) Symlink(ctx context.Context, target, name string, out *fuse.EntryOut) (node *fs.Inode, errno syscall.Errno) {
+	// todo implement
+
+	return nil, syscall.ENOSYS
 }
