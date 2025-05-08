@@ -52,8 +52,7 @@ func (n *Node) Getattr(ctx context.Context, _ fs.FileHandle, out *fuse.AttrOut) 
 
 // Lookup implementation
 func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
-	childPath := n.Path
-	childPath = filepath.Join(n.Path, name)
+	childPath := filepath.Join(n.Path, name)
 	if !strings.HasPrefix(childPath, "/") {
 		childPath = "/" + childPath
 	}
@@ -78,9 +77,9 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 	}
 
 	var mode uint32 = syscall.S_IFREG
-	if (resp.Attributes.Mode & uint32(syscall.S_IFDIR)) != 0 {
+	if (resp.Attributes.Mode & syscall.S_IFDIR) != 0 {
 		mode = syscall.S_IFDIR
-	} else if (resp.Attributes.Mode & uint32(syscall.S_IFLNK)) != 0 {
+	} else if (resp.Attributes.Mode & syscall.S_IFLNK) != 0 {
 		mode = syscall.S_IFLNK
 	}
 
@@ -106,16 +105,38 @@ func (n *Node) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 		return nil, syscall.EIO
 	}
 
-	entries := []fuse.DirEntry{}
+	entries := make([]fuse.DirEntry, 0, len(resp.Entries)+2)
+
+	entries = append(entries, fuse.DirEntry{
+		Name: ".",
+		Mode: syscall.S_IFDIR,
+		Ino:  n.StableAttr().Ino,
+	})
+
+	_, inode := n.Parent()
+	if inode != nil {
+		entries = append(entries, fuse.DirEntry{
+			Name: "..",
+			Mode: syscall.S_IFDIR,
+			Ino:  inode.StableAttr().Ino,
+		})
+	}
+
 	for _, entry := range resp.Entries {
-		name := entry.Path
+		// Get the base name from the full path
+		name := filepath.Base(entry.Path)
 		if name == "" || name == "." || name == ".." {
 			continue
 		}
 
+		var mode uint32
+		if entry.Attributes != nil {
+			mode = entry.Attributes.Mode
+		}
+
 		entries = append(entries, fuse.DirEntry{
 			Name: name,
-			Mode: entry.Attributes.Mode,
+			Mode: mode,
 			Ino:  entry.Attributes.Inode,
 		})
 	}

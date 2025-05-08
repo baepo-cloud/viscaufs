@@ -27,7 +27,6 @@ func UnaryServerInterceptorLogger() grpc.UnaryServerInterceptor {
 		// Add request metadata
 		line.Add("service", service)
 		line.Add("method", method)
-		line.Add("request", req)
 		logRequestFields(line, req)
 
 		// Record start time
