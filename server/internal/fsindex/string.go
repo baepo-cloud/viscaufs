@@ -13,7 +13,7 @@ import (
 // String returns a string representation of the FSIndex as a tree
 func (idx *FSIndex) String() string {
 	var sb strings.Builder
-	// Get all paths from the trie
+	// Get all paths from the Trie
 	type nodeInfo struct {
 		path  string
 		depth int
@@ -23,7 +23,7 @@ func (idx *FSIndex) String() string {
 
 	// Collect all paths and sort them
 	var paths []nodeInfo
-	idx.trie.ForEach(func(node art.Node) bool {
+	idx.Trie.ForEach(func(node art.Node) bool {
 		path := string(node.Key())
 		fsNode, ok := node.Value().(*FSNode)
 		if ok {
@@ -117,11 +117,15 @@ func (idx *FSIndex) String() string {
 		}
 
 		// Write the name and add file size for non-directories
+		link := "none"
+		if node.SymlinkTarget != nil {
+			link = *node.SymlinkTarget
+		}
 		if node.IsDirectory() {
-			sb.WriteString(fmt.Sprintf("%s (L: %d)", name, node.LayerPosition))
+			sb.WriteString(fmt.Sprintf("%s (L: %d, S: %s)", name, node.LayerPosition, link))
 		} else {
 			size := helper.HumanizeSize(node.Attributes.Size)
-			sb.WriteString(fmt.Sprintf("%s (%s, L: %d)", name, size, node.LayerPosition))
+			sb.WriteString(fmt.Sprintf("%s (%s, L: %d, S: %s)", name, size, node.LayerPosition, link))
 		}
 		sb.WriteString("\n")
 	}

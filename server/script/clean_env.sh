@@ -16,6 +16,7 @@ if [[ "$*" == *"-f"* ]]; then
     drop table if exists image_layers;
     drop table if exists images;
     drop table if exists layers;
+    drop table if exists schema_migrations;
     "
 else
     # SQL commands to truncate tables

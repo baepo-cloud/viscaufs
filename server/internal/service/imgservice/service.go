@@ -121,7 +121,7 @@ func (s *Service) tryAcquireDownload(image *ImageWrapper, logger *slog.Logger) e
 func (s *Service) downloadLayersReverseOrder(imgWrapper *ImageWrapper, imageModel *types.Image, logger *slog.Logger) {
 	filesystemIndexer := s.fsIndexService.CreateImageIndexChannel(imgWrapper.Digest)
 
-	for _, items := range helper.BackwardByBatches(imgWrapper.Layers, 4) {
+	for _, items := range helper.BackwardByBatches(imgWrapper.Layers, 1) {
 		var (
 			wg                        sync.WaitGroup
 			serializedFSIndexByDigest = haxmap.New[string, []byte]()

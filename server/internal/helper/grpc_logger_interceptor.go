@@ -55,7 +55,6 @@ func UnaryServerInterceptorLogger() grpc.UnaryServerInterceptor {
 		} else {
 			line.Add("code", codes.OK.String())
 			line.Add("status", codes.OK)
-			line.Add("response", resp)
 		}
 
 		// Log the request

@@ -22,7 +22,7 @@ func (idx *FSIndex) Serialize() ([]byte, error) {
 		Paths:   make([]*fspb.FSNode, 0),
 	}
 
-	idx.trie.ForEach(func(node art.Node) bool {
+	idx.Trie.ForEach(func(node art.Node) bool {
 		fsNode, ok := node.Value().(*FSNode)
 		if !ok {
 			return true
@@ -77,12 +77,12 @@ func Deserialize(data []byte) (*FSIndex, error) {
 	}
 
 	idx := &FSIndex{
-		trie: art.New(),
+		Trie: art.New(),
 	}
 
 	for _, nodeProto := range proto.Paths {
 		node := FSNodeFromProto(nodeProto)
-		idx.trie.Insert(art.Key(node.Path), node)
+		idx.Trie.Insert(art.Key(node.Path), node)
 	}
 
 	return idx, nil

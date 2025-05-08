@@ -46,7 +46,7 @@ func (f *FSNode) IsSymlink() bool {
 // FSIndex represents our optimized filesystem index
 type FSIndex struct {
 	// Adaptive Radix Tree for fast lookup
-	trie         art.Tree
+	Trie         art.Tree
 	withoutFiles map[string]struct{}
 	withoutDirs  map[string]struct{}
 }

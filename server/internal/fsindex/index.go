@@ -2,6 +2,7 @@ package fsindex
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +14,7 @@ import (
 // NewFSIndex creates a new filesystem index
 func NewFSIndex() *FSIndex {
 	return &FSIndex{
-		trie:         art.New(),
+		Trie:         art.New(),
 		withoutFiles: make(map[string]struct{}),
 		withoutDirs:  make(map[string]struct{}),
 	}
@@ -41,20 +42,22 @@ func (idx *FSIndex) BuildIndex(rootDir string) error {
 			Attributes: collectFileAttributes(info),
 		}
 
+		slog.Info("registering path", "path", node.Path, "inode", node.Attributes.Inode, "symlink", node.IsSymlink())
+
 		// If it's a symlink, read the target
 		if (info.Mode() & os.ModeSymlink) != 0 {
 			target, err := os.Readlink(path)
 			if err == nil {
-				target, err = filepath.Rel(rootDir, target)
-				if err == nil {
-					target = cleanPath(target)
-					node.SymlinkTarget = &target
-				}
+				slog.Info("path with symlink", "path", cleanPath(relPath), "target", target)
+				target = cleanPath(target)
+				node.SymlinkTarget = &target
+			} else {
+				slog.Error("unable to read symlink target", "path", path, "error", err.Error())
 			}
 		}
 
 		// Add the node to the index
-		idx.trie.Insert(art.Key(node.Path), node)
+		idx.Trie.Insert(art.Key(node.Path), node)
 
 		if strings.Contains(relPath, ".wh.") {
 			idx.withoutFiles[relPath] = struct{}{}
@@ -73,29 +76,6 @@ func (idx *FSIndex) BuildIndex(rootDir string) error {
 
 	return nil
 }
-
-// AddPath adds a relative path to the index
-func (idx *FSIndex) AddPath(relPath string, info os.FileInfo) {
-	if !strings.HasPrefix(relPath, "/") {
-		relPath = "/" + relPath
-	}
-
-	node := &FSNode{
-		Path:       relPath,
-		Attributes: collectFileAttributes(info),
-	}
-
-	idx.trie.Insert(art.Key(relPath), node)
-
-	if strings.Contains(relPath, ".wh.") {
-		idx.withoutFiles[relPath] = struct{}{}
-	}
-
-	if strings.Contains(relPath, ".wh..wh.") {
-		idx.withoutDirs[relPath] = struct{}{}
-	}
-}
-
 func collectFileAttributes(info os.FileInfo) FileAttributes {
 	stat := info.Sys().(*syscall.Stat_t)
 
@@ -127,7 +107,7 @@ func collectFileAttributes(info os.FileInfo) FileAttributes {
 func (idx *FSIndex) LookupPath(path string) (*FSNode, error) {
 	path = filepath.ToSlash(filepath.Clean(path))
 
-	value, found := idx.trie.Search(art.Key(path))
+	value, found := idx.Trie.Search(art.Key(path))
 	if !found {
 		return nil, fmt.Errorf("path not found: %s", path)
 	}
@@ -155,7 +135,7 @@ func (idx *FSIndex) LookupPrefixSearch(prefix string) []*FSNode {
 	prefixKey := art.Key(prefix)
 	prefixLen := len(prefix)
 
-	idx.trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
+	idx.Trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
 		nodePath := string(node.Key())
 
 		// Skip the prefix node itself
@@ -183,7 +163,7 @@ func (idx *FSIndex) LookupPrefixSearch(prefix string) []*FSNode {
 func (idx *FSIndex) GetStats() map[string]interface{} {
 	var totalFiles, totalDirs int
 
-	idx.trie.ForEach(func(node art.Node) (cont bool) {
+	idx.Trie.ForEach(func(node art.Node) (cont bool) {
 		val := node.Value()
 		if val == nil {
 			return true
@@ -207,7 +187,29 @@ func (idx *FSIndex) GetStats() map[string]interface{} {
 func cleanPath(path string) string {
 	path = filepath.ToSlash(filepath.Clean(path))
 	if path != "" && !strings.HasSuffix(path, "/") {
-		path += "/"
+		path = "/" + path
 	}
-	return path
+	return filepath.Clean(path)
+}
+
+// addPath adds a relative path to the index (for testing purposes)
+func (idx *FSIndex) addPath(relPath string, info os.FileInfo) {
+	if !strings.HasPrefix(relPath, "/") {
+		relPath = "/" + relPath
+	}
+
+	node := &FSNode{
+		Path:       relPath,
+		Attributes: collectFileAttributes(info),
+	}
+
+	idx.Trie.Insert(art.Key(relPath), node)
+
+	if strings.Contains(relPath, ".wh.") {
+		idx.withoutFiles[relPath] = struct{}{}
+	}
+
+	if strings.Contains(relPath, ".wh..wh.") {
+		idx.withoutDirs[relPath] = struct{}{}
+	}
 }

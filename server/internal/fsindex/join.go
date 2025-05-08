@@ -20,7 +20,7 @@ import (
 // JoinFSIndex(LAYER 1, LAYER 2, 1, true) = LAYER 1 -> the merged layer
 // JoinFSIndex(LAYER 0, LAYER 1, 0, false) = LAYER 0 -> the merged layer
 func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPosition uint8, firstJoin bool) {
-	currentLayerFSIndex.trie.ForEach(func(node art.Node) (cont bool) {
+	currentLayerFSIndex.Trie.ForEach(func(node art.Node) (cont bool) {
 		fsNode, ok := node.Value().(*FSNode)
 		if ok {
 			fsNode.LayerPosition = currentLayerPosition
@@ -30,7 +30,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPo
 	})
 
 	if firstJoin {
-		applyLayerFSIndex.trie.ForEach(func(node art.Node) (cont bool) {
+		applyLayerFSIndex.Trie.ForEach(func(node art.Node) (cont bool) {
 			fsNode, ok := node.Value().(*FSNode)
 			if ok {
 				fsNode.LayerPosition = currentLayerPosition + 1
@@ -68,21 +68,21 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPo
 		}
 
 		// Remove the target file from the previous layer
-		currentLayerFSIndex.trie.Delete(art.Key(realPath))
+		currentLayerFSIndex.Trie.Delete(art.Key(realPath))
 
 		// Find all children of this path if it was a directory and remove them
 		prefixKey := art.Key(realPath + "/")
 		var keysToDelete []art.Key
 
 		// Find all keys that need to be deleted
-		currentLayerFSIndex.trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
+		currentLayerFSIndex.Trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
 			keysToDelete = append(keysToDelete, node.Key())
 			return true
 		})
 
 		// Delete all identified keys
 		for _, key := range keysToDelete {
-			currentLayerFSIndex.trie.Delete(key)
+			currentLayerFSIndex.Trie.Delete(key)
 		}
 	}
 
@@ -105,7 +105,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPo
 			var keysToDelete []art.Key
 
 			// Find all keys that need to be deleted
-			currentLayerFSIndex.trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
+			currentLayerFSIndex.Trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
 				nodePath := string(node.Key())
 				// Don't delete the directory itself
 				if nodePath != opaqueDir && strings.HasPrefix(nodePath, string(prefixKey)) {
@@ -116,13 +116,13 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPo
 
 			// Delete all identified keys
 			for _, key := range keysToDelete {
-				currentLayerFSIndex.trie.Delete(key)
+				currentLayerFSIndex.Trie.Delete(key)
 			}
 		}
 	}
 
 	// Add or override files from the new layer
-	applyLayerFSIndex.trie.ForEach(func(node art.Node) bool {
+	applyLayerFSIndex.Trie.ForEach(func(node art.Node) bool {
 		fsNode, ok := node.Value().(*FSNode)
 		if ok {
 			fileName := filepath.Base(fsNode.Path)
@@ -133,7 +133,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPo
 			}
 
 			// Add or override the file/directory in the previous layer
-			currentLayerFSIndex.trie.Insert(node.Key(), fsNode)
+			currentLayerFSIndex.Trie.Insert(node.Key(), fsNode)
 		}
 		return true
 	})

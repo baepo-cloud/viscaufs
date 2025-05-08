@@ -28,7 +28,7 @@ func main() {
 		fx.Provide(viscaufsserver.New),
 		fx.Invoke(func(server *grpc.Server) {}),
 		fx.Invoke(func(db *gorm.DB) {
-			img := "sha256:daf9b7ead63a07bcad1de673b38566b0ba7e3b8abd12b2458486acabe598f1b7"
+			img := "sha256:067a10060292e0fc776739bf006364ab58750b2daaf01138f74cd0968c99cf24"
 			var image types.Image
 			if err := db.Where("digest = ?", img).First(&image).Error; err != nil {
 				return

@@ -66,30 +66,30 @@ func (m mockFileInfo) Sys() interface{}   { return m.sys }
 
 func TestJoinFSIndex(t *testing.T) {
 	layer0 := NewFSIndex() // layer 0
-	layer0.AddPath("file1.txt", createMockFileInfo(false))
-	layer0.AddPath("file5.txt", createMockFileInfo(false))
-	layer0.AddPath("file2.txt", createMockFileInfo(false))
-	layer0.AddPath("dir1", createMockFileInfo(true))
-	layer0.AddPath("dir1/subfile1.txt", createMockFileInfo(false))
-	layer0.AddPath("dir1/subfile2.txt", createMockFileInfo(false))
-	layer0.AddPath("dir2", createMockFileInfo(true))
-	layer0.AddPath("dir2/subfile1.txt", createMockFileInfo(false))
+	layer0.addPath("file1.txt", createMockFileInfo(false))
+	layer0.addPath("file5.txt", createMockFileInfo(false))
+	layer0.addPath("file2.txt", createMockFileInfo(false))
+	layer0.addPath("dir1", createMockFileInfo(true))
+	layer0.addPath("dir1/subfile1.txt", createMockFileInfo(false))
+	layer0.addPath("dir1/subfile2.txt", createMockFileInfo(false))
+	layer0.addPath("dir2", createMockFileInfo(true))
+	layer0.addPath("dir2/subfile1.txt", createMockFileInfo(false))
 
 	layer1 := NewFSIndex() // layer 1
-	layer1.AddPath("file4.txt", createMockFileInfo(false))
-	layer1.AddPath("file3.txt", createMockFileInfo(false))
-	layer1.AddPath("file1.txt", createMockFileInfo(false))
-	layer1.AddPath("dir1/.wh.subfile1.txt", createMockFileInfo(false))
-	layer1.AddPath("dir2/.wh..wh.opq", createMockFileInfo(false))
-	layer1.AddPath("dir2/newfile.txt", createMockFileInfo(false))
+	layer1.addPath("file4.txt", createMockFileInfo(false))
+	layer1.addPath("file3.txt", createMockFileInfo(false))
+	layer1.addPath("file1.txt", createMockFileInfo(false))
+	layer1.addPath("dir1/.wh.subfile1.txt", createMockFileInfo(false))
+	layer1.addPath("dir2/.wh..wh.opq", createMockFileInfo(false))
+	layer1.addPath("dir2/newfile.txt", createMockFileInfo(false))
 
 	layer2 := NewFSIndex() // layer 2
-	layer2.AddPath(".wh.file4.txt", createMockFileInfo(false))
-	layer2.AddPath("file5.txt", createMockFileInfo(false))
-	layer2.AddPath("file6.txt", createMockFileInfo(false))
+	layer2.addPath(".wh.file4.txt", createMockFileInfo(false))
+	layer2.addPath("file5.txt", createMockFileInfo(false))
+	layer2.addPath("file6.txt", createMockFileInfo(false))
 
 	layer3 := NewFSIndex() // layer 3
-	layer3.AddPath("file7.txt", createMockFileInfo(false))
+	layer3.addPath("file7.txt", createMockFileInfo(false))
 
 	// Add a new laye
 

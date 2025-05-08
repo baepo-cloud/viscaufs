@@ -110,7 +110,7 @@ func waitForImageReady(client fspb.FuseServiceClient, ref string, timeout time.D
 				slog.Error("Image not ready", "error", err)
 				os.Exit(1)
 			}
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(time.Millisecond * 150)
 			continue
 		}
 
