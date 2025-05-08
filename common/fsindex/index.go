@@ -12,8 +12,8 @@ import (
 )
 
 // NewFSIndex creates a new filesystem index
-func NewFSIndex() *FSIndex {
-	return &FSIndex{
+func NewFSIndex() *Index {
+	return &Index{
 		Trie:         art.New(),
 		withoutFiles: make(map[string]struct{}),
 		withoutDirs:  make(map[string]struct{}),
@@ -21,7 +21,7 @@ func NewFSIndex() *FSIndex {
 }
 
 // BuildIndex builds the index from a root directory
-func (idx *FSIndex) BuildIndex(rootDir string) error {
+func (idx *Index) BuildIndex(rootDir string) error {
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to access path %q: %w", path, err)
@@ -101,7 +101,7 @@ func collectFileAttributes(info os.FileInfo) FileAttributes {
 }
 
 // LookupPath looks up a path in the index
-func (idx *FSIndex) LookupPath(path string) (*Node, error) {
+func (idx *Index) LookupPath(path string) (*Node, error) {
 	path = filepath.ToSlash(filepath.Clean(path))
 
 	value, found := idx.Trie.Search(art.Key(path))
@@ -119,7 +119,7 @@ func (idx *FSIndex) LookupPath(path string) (*Node, error) {
 
 // LookupPrefixSearch performs a prefix search on the index
 // Only returns immediate children (depth 1) of the given prefix
-func (idx *FSIndex) LookupPrefixSearch(prefix string) []*Node {
+func (idx *Index) LookupPrefixSearch(prefix string) []*Node {
 	prefix = filepath.ToSlash(filepath.Clean(prefix))
 
 	// Ensure prefix ends with a slash if it's not empty
@@ -157,7 +157,7 @@ func (idx *FSIndex) LookupPrefixSearch(prefix string) []*Node {
 }
 
 // GetStats returns statistics about the index
-func (idx *FSIndex) GetStats() map[string]interface{} {
+func (idx *Index) GetStats() map[string]interface{} {
 	var totalFiles, totalDirs int
 
 	idx.Trie.ForEach(func(node art.Node) (cont bool) {
@@ -190,7 +190,7 @@ func cleanPath(path string) string {
 }
 
 // addPath adds a relative path to the index (for testing purposes)
-func (idx *FSIndex) addPath(relPath string, info os.FileInfo) {
+func (idx *Index) addPath(relPath string, info os.FileInfo) {
 	if !strings.HasPrefix(relPath, "/") {
 		relPath = "/" + relPath
 	}

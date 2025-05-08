@@ -23,7 +23,7 @@ message FileAttributes {
   int64 blksize = 15;
 }
 
-message FSNode {
+message FSIndexNode {
   string path = 1;
   FileAttributes attributes = 2;
   uint32 layer_position = 3;
@@ -31,7 +31,7 @@ message FSNode {
 }
 
 message FSIndex {
-  repeated FSNode paths = 1;
+  repeated FSIndexNode paths = 1;
   repeated string without_dir = 2;
   repeated string without_file = 3;
   uint32 version = 4;

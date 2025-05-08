@@ -7,7 +7,7 @@ import (
 	art "github.com/plar/go-adaptive-radix-tree/v2"
 )
 
-// JoinFSIndex merges two FSIndex instances.
+// JoinFSIndex merges two Index instances.
 // It takes the previous layer and adds the new layer on top of it, overriding existing nodes.
 // It will remove every directory and file marked as "without" in the old layer.
 // This implements the overlay filesystem semantics used in container images.
@@ -19,7 +19,7 @@ import (
 //
 // JoinFSIndex(LAYER 1, LAYER 2, 1, true) = LAYER 1 -> the merged layer
 // JoinFSIndex(LAYER 0, LAYER 1, 0, false) = LAYER 0 -> the merged layer
-func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPosition uint8, firstJoin bool) {
+func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *Index, currentLayerPosition uint8, firstJoin bool) {
 	currentLayerFSIndex.Trie.ForEach(func(node art.Node) (cont bool) {
 		fsNode, ok := node.Value().(*Node)
 		if ok {

@@ -10,8 +10,8 @@ import (
 	art "github.com/plar/go-adaptive-radix-tree/v2"
 )
 
-// String returns a string representation of the FSIndex as a tree
-func (idx *FSIndex) String() string {
+// String returns a string representation of the Index as a tree
+func (idx *Index) String() string {
 	var sb strings.Builder
 	// Get all paths from the Trie
 	type nodeInfo struct {

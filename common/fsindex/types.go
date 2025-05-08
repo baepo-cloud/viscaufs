@@ -43,8 +43,8 @@ func (f *Node) IsSymlink() bool {
 	return f.Attributes.Mode&syscall.S_IFMT == syscall.S_IFLNK
 }
 
-// FSIndex represents our optimized filesystem index
-type FSIndex struct {
+// Index represents our optimized filesystem index
+type Index struct {
 	// Adaptive Radix Tree for fast lookup
 	Trie         art.Tree
 	withoutFiles map[string]struct{}
@@ -54,8 +54,8 @@ type FSIndex struct {
 	IsComplete bool
 }
 
-func (f *Node) ToProto() *fspb.FSNode {
-	return &fspb.FSNode{
+func (f *Node) ToProto() *fspb.FSIndexNode {
+	return &fspb.FSIndexNode{
 		Path: f.Path,
 		Attributes: &fspb.FileAttributes{
 			Inode:     f.Attributes.Inode,
@@ -79,7 +79,7 @@ func (f *Node) ToProto() *fspb.FSNode {
 	}
 }
 
-func FSNodeFromProto(node *fspb.FSNode) *Node {
+func FSNodeFromProto(node *fspb.FSIndexNode) *Node {
 	return &Node{
 		Path: node.Path,
 		Attributes: FileAttributes{

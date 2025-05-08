@@ -15,11 +15,11 @@ const (
 	currentVersion = uint32(1)
 )
 
-// Serialize serializes the FSIndex into a FlatBuffer byte array
-func (idx *FSIndex) Serialize() ([]byte, error) {
+// Serialize serializes the Index into a FlatBuffer byte array
+func (idx *Index) Serialize() ([]byte, error) {
 	proto := &fspb.FSIndex{
 		Version: currentVersion,
-		Paths:   make([]*fspb.FSNode, 0),
+		Paths:   make([]*fspb.FSIndexNode, 0),
 	}
 
 	idx.Trie.ForEach(func(node art.Node) bool {
@@ -34,7 +34,7 @@ func (idx *FSIndex) Serialize() ([]byte, error) {
 
 	data, err := protobuf.Marshal(proto)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize FSIndex: %w", err)
+		return nil, fmt.Errorf("failed to serialize Index: %w", err)
 	}
 
 	var b bytes.Buffer
@@ -54,8 +54,8 @@ func (idx *FSIndex) Serialize() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// Deserialize deserializes the byte array into a FSIndex
-func Deserialize(data []byte, isComplete bool) (*FSIndex, error) {
+// Deserialize deserializes the byte array into a Index
+func Deserialize(data []byte, isComplete bool) (*Index, error) {
 	r, err := zlib.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create zlib reader: %w", err)
@@ -69,14 +69,14 @@ func Deserialize(data []byte, isComplete bool) (*FSIndex, error) {
 
 	proto := &fspb.FSIndex{}
 	if err := protobuf.Unmarshal(decompressedData, proto); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal FSIndex: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal Index: %w", err)
 	}
 
 	if proto.Version != currentVersion {
-		return nil, fmt.Errorf("unsupported FSIndex version: %d", proto.Version)
+		return nil, fmt.Errorf("unsupported Index version: %d", proto.Version)
 	}
 
-	idx := &FSIndex{
+	idx := &Index{
 		Trie:       art.New(),
 		IsComplete: isComplete,
 	}

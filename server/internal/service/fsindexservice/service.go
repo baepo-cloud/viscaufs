@@ -15,8 +15,8 @@ import (
 )
 
 type Service struct {
-	layerDigestToFSIndex *haxmap.Map[string, *fsindex.FSIndex]
-	imageDigestToFSIndex *haxmap.Map[string, *fsindex.FSIndex]
+	layerDigestToFSIndex *haxmap.Map[string, *fsindex.Index]
+	imageDigestToFSIndex *haxmap.Map[string, *fsindex.Index]
 
 	db     *gorm.DB
 	logger *slog.Logger
@@ -27,8 +27,8 @@ func NewService(db *gorm.DB) *Service {
 	return &Service{
 		db:                   db,
 		logger:               slog.New(slog.NewTextHandler(log.Writer(), nil)).With("service", "fsindex"),
-		layerDigestToFSIndex: haxmap.New[string, *fsindex.FSIndex](),
-		imageDigestToFSIndex: haxmap.New[string, *fsindex.FSIndex](),
+		layerDigestToFSIndex: haxmap.New[string, *fsindex.Index](),
+		imageDigestToFSIndex: haxmap.New[string, *fsindex.Index](),
 	}
 }
 
@@ -36,12 +36,12 @@ func (s *Service) CreateImageIndexChannel(imageDigest string) chan<- types.FileS
 	layersChan := make(chan types.FileSystemIndexLayer, 16)
 
 	go func() {
-		var imageFSIndex *fsindex.FSIndex
+		var imageFSIndex *fsindex.Index
 		firstTimeJoin := true
 		now := time.Now()
 		for layer := range layersChan {
 			nowLayer := time.Now()
-			var currentFsIndex *fsindex.FSIndex
+			var currentFsIndex *fsindex.Index
 			layerFSIndex, ok := s.layerDigestToFSIndex.Get(layer.Digest)
 			if ok {
 				currentFsIndex = layerFSIndex
