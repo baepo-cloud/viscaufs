@@ -50,7 +50,8 @@ type FSIndex struct {
 	withoutFiles map[string]struct{}
 	withoutDirs  map[string]struct{}
 
-	Finished bool
+	// IsComplete indicates if the index is complete (image is fully loaded or partially loaded)
+	IsComplete bool
 }
 
 func (f *FSNode) ToProto() *fspb.FSNode {

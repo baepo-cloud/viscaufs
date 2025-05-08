@@ -38,7 +38,7 @@ func main() {
 			}
 
 			now := time.Now()
-			fi, _ := fsindex.Deserialize(image.FsIndex)
+			fi, _ := fsindex.Deserialize(image.FsIndex, true)
 			slog.Info("time deserialize", slog.String("time", time.Since(now).String()))
 			s := fi.String()
 

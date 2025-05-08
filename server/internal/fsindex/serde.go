@@ -55,7 +55,7 @@ func (idx *FSIndex) Serialize() ([]byte, error) {
 }
 
 // Deserialize deserializes the byte array into a FSIndex
-func Deserialize(data []byte) (*FSIndex, error) {
+func Deserialize(data []byte, isComplete bool) (*FSIndex, error) {
 	r, err := zlib.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create zlib reader: %w", err)
@@ -77,7 +77,8 @@ func Deserialize(data []byte) (*FSIndex, error) {
 	}
 
 	idx := &FSIndex{
-		Trie: art.New(),
+		Trie:       art.New(),
+		IsComplete: isComplete,
 	}
 
 	for _, nodeProto := range proto.Paths {

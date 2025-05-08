@@ -46,7 +46,7 @@ func (s *Service) CreateImageIndexChannel(imageDigest string) chan<- types.FileS
 			if ok {
 				currentFsIndex = layerFSIndex
 			} else {
-				currentFsIndex, _ = fsindex.Deserialize(layer.SerializedData)
+				currentFsIndex, _ = fsindex.Deserialize(layer.SerializedData, false)
 			}
 
 			if imageFSIndex == nil {
@@ -64,7 +64,7 @@ func (s *Service) CreateImageIndexChannel(imageDigest string) chan<- types.FileS
 				slog.String("layer_digest", layer.Digest))
 
 			if layer.Position == 0 {
-				imageFSIndex.Finished = true
+				imageFSIndex.IsComplete = true
 			}
 			s.imageDigestToFSIndex.Set(imageDigest, imageFSIndex)
 		}
@@ -100,8 +100,7 @@ func (s *Service) Ready(imageDigest string) bool {
 	}
 
 	if imageModel.FsIndex != nil {
-		deserializeFSIndex, _ := fsindex.Deserialize(imageModel.FsIndex)
-		deserializeFSIndex.Finished = true
+		deserializeFSIndex, _ := fsindex.Deserialize(imageModel.FsIndex, true)
 		s.imageDigestToFSIndex.Set(imageDigest, deserializeFSIndex)
 		return true
 	}
@@ -111,8 +110,7 @@ func (s *Service) Ready(imageDigest string) bool {
 
 func (s *Service) BuildImageIndex(img *types.Image, digestToPosition map[string]uint8) {
 	if img.FsIndex != nil {
-		fi, _ := fsindex.Deserialize(img.FsIndex)
-		fi.Finished = true
+		fi, _ := fsindex.Deserialize(img.FsIndex, true)
 		s.imageDigestToFSIndex.Set(img.Digest, fi)
 		return
 	}
@@ -173,7 +171,7 @@ func (s *Service) Lookup(ctx context.Context, imageDigest, path string) *fsindex
 			return node
 		}
 
-		if imageFSIndex.Finished {
+		if imageFSIndex.IsComplete {
 			return nil
 		}
 
@@ -210,8 +208,8 @@ func (s *Service) LookupByPrefix(ctx context.Context, imageDigest, path string) 
 			return nodes
 		}
 
-		fmt.Println("FINISHED?", imageFSIndex.Finished)
-		if imageFSIndex.Finished {
+		fmt.Println("FINISHED?", imageFSIndex.IsComplete)
+		if imageFSIndex.IsComplete {
 			return nil
 		}
 
