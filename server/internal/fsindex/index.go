@@ -42,13 +42,10 @@ func (idx *FSIndex) BuildIndex(rootDir string) error {
 			Attributes: collectFileAttributes(info),
 		}
 
-		slog.Info("registering path", "path", node.Path, "inode", node.Attributes.Inode, "symlink", node.IsSymlink())
-
 		// If it's a symlink, read the target
 		if (info.Mode() & os.ModeSymlink) != 0 {
 			target, err := os.Readlink(path)
 			if err == nil {
-				slog.Info("path with symlink", "path", cleanPath(relPath), "target", target)
 				target = cleanPath(target)
 				node.SymlinkTarget = &target
 			} else {
