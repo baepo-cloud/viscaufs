@@ -1,17 +1,23 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/baepo-cloud/viscaufs-server/internal/helper"
+)
 
 // Image represents the images table
 type Image struct {
-	ID          string
-	Repository  string
-	Identifier  string
-	Digest      string
-	LayersCount int
-	Manifest    string
-	FsIndex     []byte
-	CreatedAt   time.Time
+	ID           string
+	Repository   string
+	Identifier   string
+	Digest       string
+	LayersCount  int
+	LayerDigests helper.SQLiteStringArray
+	Manifest     string
+	FsIndex      []byte
+
+	CreatedAt time.Time
 
 	Layers []*Layer `gorm:"many2many:image_layers;joinForeignKey:ImageID;joinReferences:LayerID"`
 }

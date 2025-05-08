@@ -251,12 +251,13 @@ func (s *Service) upsertImage(imgWrapper *ImageWrapper) (*types.Image, error) {
 	}
 
 	imageModel := types.Image{
-		ID:          cuid2.Generate(),
-		Repository:  imgWrapper.Reference.Context().Name(),
-		Identifier:  imgWrapper.Reference.Identifier(),
-		LayersCount: len(imgWrapper.Layers),
-		Manifest:    string(manifestBytes),
-		Digest:      imgWrapper.Digest,
+		ID:           cuid2.Generate(),
+		Repository:   imgWrapper.Reference.Context().Name(),
+		Identifier:   imgWrapper.Reference.Identifier(),
+		LayersCount:  len(imgWrapper.Layers),
+		LayerDigests: imgWrapper.LayersDigests,
+		Manifest:     string(manifestBytes),
+		Digest:       imgWrapper.Digest,
 	}
 
 	if err := s.db.Clauses(clause.OnConflict{

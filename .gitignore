@@ -1,3 +1,4 @@
 .idea
 baepo-viscaufs.iml
 server/images
+db/storage*
