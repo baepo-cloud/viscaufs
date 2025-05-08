@@ -161,16 +161,58 @@ func (n *Node) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 }
 
 func (n *Node) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
-	//TODO implement me
-	panic("implement me")
+	resp, err := n.FS.Client.Open(ctx, &fspb.OpenRequest{
+		Path:        n.Path,
+		Flags:       flags,
+		ImageDigest: n.FS.ImageDigest,
+	})
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "DEBUG: Open error: %v\n", err)
+		return nil, 0, syscall.EIO
+	}
+
+	handle := &FileHandle{
+		Uid: resp.Uid,
+	}
+
+	return handle, fuse.FOPEN_KEEP_CACHE, 0
 }
 
 func (n *Node) Read(ctx context.Context, f fs.FileHandle, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
-	//TODO implement me
-	panic("implement me")
+	fh, ok := f.(*FileHandle)
+	if !ok {
+		return nil, syscall.EINVAL
+	}
+
+	resp, err := n.FS.Client.Read(ctx, &fspb.ReadRequest{
+		Uid:    fh.Uid,
+		Offset: off,
+		Size:   uint32(len(dest)),
+	})
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "DEBUG: Read error: %v\n", err)
+		return nil, syscall.EIO
+	}
+
+	return fuse.ReadResultData(resp.Data), 0
 }
 
 func (n *Node) Release(ctx context.Context, f fs.FileHandle) syscall.Errno {
-	//TODO implement me
-	panic("implement me")
+	fh, ok := f.(*FileHandle)
+	if !ok {
+		return syscall.EINVAL
+	}
+
+	_, err := n.FS.Client.Release(ctx, &fspb.ReleaseRequest{
+		Uid: fh.Uid,
+	})
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "DEBUG: Release error: %v\n", err)
+		return syscall.EIO
+	}
+
+	return 0
 }

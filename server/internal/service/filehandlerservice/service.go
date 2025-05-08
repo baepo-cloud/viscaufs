@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"log/slog"
 	"os"
@@ -74,14 +75,14 @@ func (s *Service) OpenFile(ctx context.Context, params types.OpenFileParams) (st
 		return "", fmt.Errorf("failed to stat file: %w", err)
 	}
 
-	// Combine all write-related flags
-	writeFlags := os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREATE | os.O_EXCL | os.O_TRUNC
-
-	// Remove write flags because we only want to read
-	newFlag := int(params.Flags) &^ writeFlags
+	//// Combine all write-related flags
+	//writeFlags := os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREATE | os.O_EXCL | os.O_TRUNC
+	//
+	//// Remove write flags because we only want to read
+	//newFlag := int(params.Flags) &^ writeFlags
 
 	// open the file
-	file, err := os.OpenFile(filePath, newFlag, 0)
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0)
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
@@ -121,9 +122,14 @@ func (s *Service) ReadFile(uid string, offset int64, length uint32) ([]byte, err
 
 	data := make([]byte, length)
 	n, err := fh.File.ReadAt(data, offset)
+
+	if (err == nil || err == io.EOF) && n > 0 {
+		return data[:n], nil
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	return data[:n], nil
+	return []byte{}, nil
 }

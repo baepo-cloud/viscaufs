@@ -101,6 +101,7 @@ func (s *Service) Ready(imageDigest string) bool {
 
 	if imageModel.FsIndex != nil {
 		deserializeFSIndex, _ := fsindex.Deserialize(imageModel.FsIndex)
+		deserializeFSIndex.Finished = true
 		s.imageDigestToFSIndex.Set(imageDigest, deserializeFSIndex)
 		return true
 	}
@@ -111,6 +112,7 @@ func (s *Service) Ready(imageDigest string) bool {
 func (s *Service) BuildImageIndex(img *types.Image, digestToPosition map[string]uint8) {
 	if img.FsIndex != nil {
 		fi, _ := fsindex.Deserialize(img.FsIndex)
+		fi.Finished = true
 		s.imageDigestToFSIndex.Set(img.Digest, fi)
 		return
 	}
@@ -208,6 +210,7 @@ func (s *Service) LookupByPrefix(ctx context.Context, imageDigest, path string) 
 			return nodes
 		}
 
+		fmt.Println("FINISHED?", imageFSIndex.Finished)
 		if imageFSIndex.Finished {
 			return nil
 		}
