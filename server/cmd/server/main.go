@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/baepo-cloud/viscaufs-common/fsindex"
 	"log/slog"
 	"os"
 	"time"
 
 	"github.com/baepo-cloud/viscaufs-server/internal/config"
-	"github.com/baepo-cloud/viscaufs-server/internal/fsindex"
 	"github.com/baepo-cloud/viscaufs-server/internal/fxutil"
 	"github.com/baepo-cloud/viscaufs-server/internal/service/filehandlerservice"
 	"github.com/baepo-cloud/viscaufs-server/internal/service/fsindexservice"

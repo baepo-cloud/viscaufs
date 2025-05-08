@@ -23,7 +23,7 @@ func (idx *FSIndex) Serialize() ([]byte, error) {
 	}
 
 	idx.Trie.ForEach(func(node art.Node) bool {
-		fsNode, ok := node.Value().(*FSNode)
+		fsNode, ok := node.Value().(*Node)
 		if !ok {
 			return true
 		}

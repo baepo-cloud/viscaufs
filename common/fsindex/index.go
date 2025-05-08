@@ -37,7 +37,7 @@ func (idx *FSIndex) BuildIndex(rootDir string) error {
 		}
 
 		// Create the node first
-		node := &FSNode{
+		node := &Node{
 			Path:       cleanPath(relPath),
 			Attributes: collectFileAttributes(info),
 		}
@@ -101,7 +101,7 @@ func collectFileAttributes(info os.FileInfo) FileAttributes {
 }
 
 // LookupPath looks up a path in the index
-func (idx *FSIndex) LookupPath(path string) (*FSNode, error) {
+func (idx *FSIndex) LookupPath(path string) (*Node, error) {
 	path = filepath.ToSlash(filepath.Clean(path))
 
 	value, found := idx.Trie.Search(art.Key(path))
@@ -109,7 +109,7 @@ func (idx *FSIndex) LookupPath(path string) (*FSNode, error) {
 		return nil, fmt.Errorf("path not found: %s", path)
 	}
 
-	node, ok := value.(*FSNode)
+	node, ok := value.(*Node)
 	if !ok {
 		return nil, fmt.Errorf("invalid node type for path: %s", path)
 	}
@@ -119,7 +119,7 @@ func (idx *FSIndex) LookupPath(path string) (*FSNode, error) {
 
 // LookupPrefixSearch performs a prefix search on the index
 // Only returns immediate children (depth 1) of the given prefix
-func (idx *FSIndex) LookupPrefixSearch(prefix string) []*FSNode {
+func (idx *FSIndex) LookupPrefixSearch(prefix string) []*Node {
 	prefix = filepath.ToSlash(filepath.Clean(prefix))
 
 	// Ensure prefix ends with a slash if it's not empty
@@ -128,7 +128,7 @@ func (idx *FSIndex) LookupPrefixSearch(prefix string) []*FSNode {
 		prefix += "/"
 	}
 
-	var results []*FSNode
+	var results []*Node
 	prefixKey := art.Key(prefix)
 	prefixLen := len(prefix)
 
@@ -145,7 +145,7 @@ func (idx *FSIndex) LookupPrefixSearch(prefix string) []*FSNode {
 
 		// Only include direct children (no additional slashes in the relative path)
 		if !strings.Contains(relPath, "/") {
-			if fsNode, ok := node.Value().(*FSNode); ok {
+			if fsNode, ok := node.Value().(*Node); ok {
 				results = append(results, fsNode)
 			}
 		}
@@ -165,7 +165,7 @@ func (idx *FSIndex) GetStats() map[string]interface{} {
 		if val == nil {
 			return true
 		}
-		if fsNode, ok := val.(*FSNode); ok {
+		if fsNode, ok := val.(*Node); ok {
 			if fsNode.IsDirectory() {
 				totalDirs++
 			} else {
@@ -195,7 +195,7 @@ func (idx *FSIndex) addPath(relPath string, info os.FileInfo) {
 		relPath = "/" + relPath
 	}
 
-	node := &FSNode{
+	node := &Node{
 		Path:       relPath,
 		Attributes: collectFileAttributes(info),
 	}

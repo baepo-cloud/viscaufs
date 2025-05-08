@@ -2,11 +2,11 @@ package fsindex
 
 import (
 	"fmt"
+	"github.com/baepo-cloud/viscaufs-common/humanize"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/baepo-cloud/viscaufs-server/internal/helper"
 	art "github.com/plar/go-adaptive-radix-tree/v2"
 )
 
@@ -17,7 +17,7 @@ func (idx *FSIndex) String() string {
 	type nodeInfo struct {
 		path  string
 		depth int
-		node  *FSNode
+		node  *Node
 		last  bool // whether this is the last child at its level
 	}
 
@@ -25,7 +25,7 @@ func (idx *FSIndex) String() string {
 	var paths []nodeInfo
 	idx.Trie.ForEach(func(node art.Node) bool {
 		path := string(node.Key())
-		fsNode, ok := node.Value().(*FSNode)
+		fsNode, ok := node.Value().(*Node)
 		if ok {
 			depth := strings.Count(path, "/")
 			if path == "" {
@@ -124,7 +124,7 @@ func (idx *FSIndex) String() string {
 		if node.IsDirectory() {
 			sb.WriteString(fmt.Sprintf("%s (L: %d, S: %s)", name, node.LayerPosition, link))
 		} else {
-			size := helper.HumanizeSize(node.Attributes.Size)
+			size := humanize.Bytes(node.Attributes.Size)
 			sb.WriteString(fmt.Sprintf("%s (%s, L: %d, S: %s)", name, size, node.LayerPosition, link))
 		}
 		sb.WriteString("\n")

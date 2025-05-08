@@ -2,8 +2,7 @@ package types
 
 import (
 	"context"
-
-	"github.com/baepo-cloud/viscaufs-server/internal/fsindex"
+	"github.com/baepo-cloud/viscaufs-common/fsindex"
 )
 
 type (
@@ -18,8 +17,8 @@ type (
 		BuildImageIndex(inspect *Image, digestToPosition map[string]uint8)
 		BuildLayerIndex(path, layerDigest string) ([]byte, error)
 
-		Lookup(ctx context.Context, imageDigest, path string) *fsindex.FSNode
-		LookupByPrefix(ctx context.Context, imageDigest, path string) []*fsindex.FSNode
+		Lookup(ctx context.Context, imageDigest, path string) *fsindex.Node
+		LookupByPrefix(ctx context.Context, imageDigest, path string) []*fsindex.Node
 		Ready(imageDigest string) bool
 	}
 )

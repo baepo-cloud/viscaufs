@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/baepo-cloud/viscaufs-common/fsindex"
 	"io"
 	"log"
 	"log/slog"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/alphadose/haxmap"
 	"github.com/baepo-cloud/viscaufs-server/internal/config"
-	"github.com/baepo-cloud/viscaufs-server/internal/fsindex"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
 	"github.com/nrednav/cuid2"
 	"gorm.io/gorm"
@@ -51,7 +51,7 @@ func (s *Service) OpenFile(ctx context.Context, params types.OpenFileParams) (st
 	var (
 		image types.Image
 		uid   = cuid2.Generate()
-		node  *fsindex.FSNode
+		node  *fsindex.Node
 	)
 
 	node = s.fsIndexService.Lookup(ctx, params.ImageDigest, params.Path)

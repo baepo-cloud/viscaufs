@@ -7,8 +7,8 @@ import (
 	art "github.com/plar/go-adaptive-radix-tree/v2"
 )
 
-// FSNode represents a node in our filesystem index
-type FSNode struct {
+// Node represents a node in our filesystem index
+type Node struct {
 	Path          string
 	Attributes    FileAttributes
 	LayerPosition uint8
@@ -35,11 +35,11 @@ type FileAttributes struct {
 	Blksize int64
 }
 
-func (f *FSNode) IsDirectory() bool {
+func (f *Node) IsDirectory() bool {
 	return f.Attributes.Mode&syscall.S_IFMT == syscall.S_IFDIR
 }
 
-func (f *FSNode) IsSymlink() bool {
+func (f *Node) IsSymlink() bool {
 	return f.Attributes.Mode&syscall.S_IFMT == syscall.S_IFLNK
 }
 
@@ -54,7 +54,7 @@ type FSIndex struct {
 	IsComplete bool
 }
 
-func (f *FSNode) ToProto() *fspb.FSNode {
+func (f *Node) ToProto() *fspb.FSNode {
 	return &fspb.FSNode{
 		Path: f.Path,
 		Attributes: &fspb.FileAttributes{
@@ -79,8 +79,8 @@ func (f *FSNode) ToProto() *fspb.FSNode {
 	}
 }
 
-func FSNodeFromProto(node *fspb.FSNode) *FSNode {
-	return &FSNode{
+func FSNodeFromProto(node *fspb.FSNode) *Node {
+	return &Node{
 		Path: node.Path,
 		Attributes: FileAttributes{
 			Inode:     node.Attributes.Inode,

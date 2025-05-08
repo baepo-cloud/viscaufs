@@ -1,9 +1,9 @@
-package helper
+package humanize
 
 import "fmt"
 
-// HumanizeSize converts file size in bytes to a human-readable form
-func HumanizeSize(size int64) string {
+// Bytes converts file size in bytes to a human-readable form
+func Bytes(size int64) string {
 	const unit = 1024
 	if size < unit {
 		return fmt.Sprintf("%d B", size)

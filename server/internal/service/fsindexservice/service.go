@@ -3,13 +3,13 @@ package fsindexservice
 import (
 	"context"
 	"fmt"
+	"github.com/baepo-cloud/viscaufs-common/fsindex"
 	"log"
 	"log/slog"
 	"slices"
 	"time"
 
 	"github.com/alphadose/haxmap"
-	"github.com/baepo-cloud/viscaufs-server/internal/fsindex"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
 	"gorm.io/gorm"
 )
@@ -149,7 +149,7 @@ func (s *Service) BuildLayerIndex(path, layerDigest string) ([]byte, error) {
 
 // Lookup attempts to lookup a path in the filesystem index
 // and retries if the index is still being built, unless context is done
-func (s *Service) Lookup(ctx context.Context, imageDigest, path string) *fsindex.FSNode {
+func (s *Service) Lookup(ctx context.Context, imageDigest, path string) *fsindex.Node {
 	for {
 		select {
 		case <-ctx.Done():
@@ -186,7 +186,7 @@ func (s *Service) Lookup(ctx context.Context, imageDigest, path string) *fsindex
 
 // LookupByPrefix attempts to lookup paths with a prefix in the filesystem index
 // and retries if the index is still being built, unless context is done
-func (s *Service) LookupByPrefix(ctx context.Context, imageDigest, path string) []*fsindex.FSNode {
+func (s *Service) LookupByPrefix(ctx context.Context, imageDigest, path string) []*fsindex.Node {
 	for {
 		select {
 		case <-ctx.Done():

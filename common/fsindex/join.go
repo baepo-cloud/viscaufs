@@ -21,7 +21,7 @@ import (
 // JoinFSIndex(LAYER 0, LAYER 1, 0, false) = LAYER 0 -> the merged layer
 func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPosition uint8, firstJoin bool) {
 	currentLayerFSIndex.Trie.ForEach(func(node art.Node) (cont bool) {
-		fsNode, ok := node.Value().(*FSNode)
+		fsNode, ok := node.Value().(*Node)
 		if ok {
 			fsNode.LayerPosition = currentLayerPosition
 		}
@@ -31,7 +31,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPo
 
 	if firstJoin {
 		applyLayerFSIndex.Trie.ForEach(func(node art.Node) (cont bool) {
-			fsNode, ok := node.Value().(*FSNode)
+			fsNode, ok := node.Value().(*Node)
 			if ok {
 				fsNode.LayerPosition = currentLayerPosition + 1
 			}
@@ -123,7 +123,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *FSIndex, currentLayerPo
 
 	// Add or override files from the new layer
 	applyLayerFSIndex.Trie.ForEach(func(node art.Node) bool {
-		fsNode, ok := node.Value().(*FSNode)
+		fsNode, ok := node.Value().(*Node)
 		if ok {
 			fileName := filepath.Base(fsNode.Path)
 
