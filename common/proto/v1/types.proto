@@ -27,6 +27,7 @@ message FSNode {
   string path = 1;
   FileAttributes attributes = 2;
   uint32 layer_position = 3;
+  optional string symlink_target = 4;
 }
 
 message FSIndex {

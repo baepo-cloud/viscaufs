@@ -19,10 +19,63 @@ func NewFSIndex() *FSIndex {
 	}
 }
 
+// BuildIndex builds the index from a root directory
+func (idx *FSIndex) BuildIndex(rootDir string) error {
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to access path %q: %w", path, err)
+		}
+
+		relPath, relErr := filepath.Rel(rootDir, path)
+		if relErr != nil {
+			return fmt.Errorf("failed to compute relative path for %q: %w", path, relErr)
+		}
+
+		if relPath == "." {
+			return nil
+		}
+
+		// Create the node first
+		node := &FSNode{
+			Path:       cleanPath(relPath),
+			Attributes: collectFileAttributes(info),
+		}
+
+		// If it's a symlink, read the target
+		if (info.Mode() & os.ModeSymlink) != 0 {
+			target, err := os.Readlink(path)
+			if err == nil {
+				target, err = filepath.Rel(rootDir, target)
+				if err == nil {
+					target = cleanPath(target)
+					node.SymlinkTarget = &target
+				}
+			}
+		}
+
+		// Add the node to the index
+		idx.trie.Insert(art.Key(node.Path), node)
+
+		if strings.Contains(relPath, ".wh.") {
+			idx.withoutFiles[relPath] = struct{}{}
+		}
+
+		if strings.Contains(relPath, ".wh..wh.") {
+			idx.withoutDirs[relPath] = struct{}{}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to build index: %w", err)
+	}
+
+	return nil
+}
+
 // AddPath adds a relative path to the index
 func (idx *FSIndex) AddPath(relPath string, info os.FileInfo) {
-	relPath = filepath.ToSlash(filepath.Clean(relPath))
-
 	if !strings.HasPrefix(relPath, "/") {
 		relPath = "/" + relPath
 	}
@@ -41,34 +94,6 @@ func (idx *FSIndex) AddPath(relPath string, info os.FileInfo) {
 	if strings.Contains(relPath, ".wh..wh.") {
 		idx.withoutDirs[relPath] = struct{}{}
 	}
-}
-
-// BuildIndex builds the index from a root directory
-func (idx *FSIndex) BuildIndex(rootDir string) error {
-	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return fmt.Errorf("failed to access path %q: %w", path, err)
-		}
-
-		relPath, relErr := filepath.Rel(rootDir, path)
-		if relErr != nil {
-			return fmt.Errorf("failed to compute relative path for %q: %w", path, relErr)
-		}
-
-		if relPath == "." {
-			return nil
-		}
-
-		idx.AddPath(relPath, info)
-
-		return nil
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to build index: %w", err)
-	}
-
-	return nil
 }
 
 func collectFileAttributes(info os.FileInfo) FileAttributes {
@@ -177,4 +202,12 @@ func (idx *FSIndex) GetStats() map[string]interface{} {
 		"total_files":       totalFiles,
 		"total_directories": totalDirs,
 	}
+}
+
+func cleanPath(path string) string {
+	path = filepath.ToSlash(filepath.Clean(path))
+	if path != "" && !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	return path
 }

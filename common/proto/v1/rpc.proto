@@ -6,9 +6,10 @@ option go_package = "github.com/baepo-cloud/viscaufs-common/fspb/v1;fspb";
 
 import "v1/types.proto";
 
-message DirEntry {
+message File {
   string path = 1;
   FileAttributes attributes = 2;
+  optional string symlink_target = 3;
 }
 
 message PrepareImageRequest {
@@ -31,7 +32,7 @@ message GetAttrRequest {
 }
 
 message GetAttrResponse {
-  FileAttributes attributes = 1;
+  File file = 1;
 }
 
 message ReadDirRequest {
@@ -40,7 +41,7 @@ message ReadDirRequest {
 }
 
 message ReadDirResponse {
-  repeated DirEntry entries = 1;
+  repeated File entries = 1;
 }
 
 message OpenRequest {

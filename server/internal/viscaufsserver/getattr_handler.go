@@ -32,7 +32,10 @@ func (s Server) GetAttr(_ context.Context, request *fspb.GetAttrRequest) (*fspb.
 		}
 
 		return &fspb.GetAttrResponse{
-			Attributes: rootAttrs,
+			File: &fspb.File{
+				Path:       request.Path,
+				Attributes: rootAttrs,
+			},
 		}, nil
 	}
 
@@ -43,6 +46,10 @@ func (s Server) GetAttr(_ context.Context, request *fspb.GetAttrRequest) (*fspb.
 
 	proto := lookup.ToProto()
 	return &fspb.GetAttrResponse{
-		Attributes: proto.Attributes,
+		File: &fspb.File{
+			Path:          request.Path,
+			Attributes:    proto.Attributes,
+			SymlinkTarget: proto.SymlinkTarget,
+		},
 	}, nil
 }

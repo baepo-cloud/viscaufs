@@ -3,13 +3,14 @@ package viscaufs
 import (
 	"context"
 	"fmt"
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
-	"github.com/hanwen/go-fuse/v2/fs"
-	"github.com/hanwen/go-fuse/v2/fuse"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
+
+	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
+	"github.com/hanwen/go-fuse/v2/fs"
+	"github.com/hanwen/go-fuse/v2/fuse"
 )
 
 // FS represents our FUSE filesystem
@@ -21,16 +22,17 @@ type FS struct {
 // Node directly implements FS interfaces
 type Node struct {
 	fs.Inode
-	FS   *FS
-	Path string
+	FS            *FS
+	Path          string
+	SymlinkTarget *string
 }
 
 // Ensure interfaces are implemented
 var (
-	_ fs.NodeGetattrer = (*Node)(nil)
-	_ fs.NodeLookuper  = (*Node)(nil)
-	_ fs.NodeReaddirer = (*Node)(nil)
-	_ fs.NodeSymlinker = (*Node)(nil)
+	_ fs.NodeGetattrer  = (*Node)(nil)
+	_ fs.NodeLookuper   = (*Node)(nil)
+	_ fs.NodeReaddirer  = (*Node)(nil)
+	_ fs.NodeReadlinker = (*Node)(nil)
 )
 
 // Getattr implementation
@@ -47,7 +49,7 @@ func (n *Node) Getattr(ctx context.Context, _ fs.FileHandle, out *fuse.AttrOut) 
 		return syscall.ENOENT
 	}
 
-	AttrFromProto(&out.Attr, resp.Attributes)
+	AttrFromProto(&out.Attr, resp.File.Attributes)
 	return 0
 }
 
@@ -70,16 +72,17 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 		return nil, syscall.ENOENT
 	}
 
-	AttrFromProto(&out.Attr, resp.Attributes)
+	AttrFromProto(&out.Attr, resp.File.Attributes)
 
 	child := &Node{
-		FS:   n.FS,
-		Path: childPath,
+		FS:            n.FS,
+		Path:          childPath,
+		SymlinkTarget: resp.File.SymlinkTarget,
 	}
 
 	childInode := n.NewInode(ctx, child, fs.StableAttr{
-		Mode: resp.Attributes.Mode,
-		Ino:  resp.Attributes.Inode,
+		Mode: resp.File.Attributes.Mode,
+		Ino:  resp.File.Attributes.Inode,
 	})
 
 	return childInode, 0
@@ -117,7 +120,6 @@ func (n *Node) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	}
 
 	for _, entry := range resp.Entries {
-		// Get the base name from the full path
 		name := filepath.Base(entry.Path)
 		if name == "" || name == "." || name == ".." {
 			continue
@@ -138,8 +140,15 @@ func (n *Node) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	return fs.NewListDirStream(entries), 0
 }
 
-func (n *Node) Symlink(ctx context.Context, target, name string, out *fuse.EntryOut) (node *fs.Inode, errno syscall.Errno) {
-	// todo implement
+func (n *Node) Readlink(_ context.Context) ([]byte, syscall.Errno) {
+	// Check if this node is actually a symlink
+	if n.StableAttr().Mode&syscall.S_IFMT != syscall.S_IFLNK {
+		return nil, syscall.EINVAL
+	}
 
-	return nil, syscall.ENOSYS
+	if n.SymlinkTarget == nil {
+		return nil, syscall.ENOENT
+	}
+
+	return []byte(*n.SymlinkTarget), 0
 }

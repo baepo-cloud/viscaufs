@@ -12,6 +12,7 @@ type FSNode struct {
 	Path          string
 	Attributes    FileAttributes
 	LayerPosition uint8
+	SymlinkTarget *string
 }
 
 type FileAttributes struct {
@@ -34,16 +35,20 @@ type FileAttributes struct {
 	Blksize int64
 }
 
+func (f *FSNode) IsDirectory() bool {
+	return f.Attributes.Mode&syscall.S_IFMT == syscall.S_IFDIR
+}
+
+func (f *FSNode) IsSymlink() bool {
+	return f.Attributes.Mode&syscall.S_IFMT == syscall.S_IFLNK
+}
+
 // FSIndex represents our optimized filesystem index
 type FSIndex struct {
 	// Adaptive Radix Tree for fast lookup
 	trie         art.Tree
 	withoutFiles map[string]struct{}
 	withoutDirs  map[string]struct{}
-}
-
-func (f *FSNode) IsDirectory() bool {
-	return f.Attributes.Mode&syscall.S_IFMT == syscall.S_IFDIR
 }
 
 func (f *FSNode) ToProto() *fspb.FSNode {
@@ -67,6 +72,7 @@ func (f *FSNode) ToProto() *fspb.FSNode {
 			Blksize:   f.Attributes.Blksize,
 		},
 		LayerPosition: uint32(f.LayerPosition),
+		SymlinkTarget: f.SymlinkTarget,
 	}
 }
 
@@ -96,5 +102,6 @@ func FSNodeFromProto(node *fspb.FSNode) *FSNode {
 			Blksize: node.Attributes.Blksize,
 		},
 		LayerPosition: uint8(node.LayerPosition),
+		SymlinkTarget: node.SymlinkTarget,
 	}
 }

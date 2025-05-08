@@ -7,24 +7,14 @@ import (
 )
 
 func (s Server) ReadDir(ctx context.Context, request *fspb.ReadDirRequest) (*fspb.ReadDirResponse, error) {
-	/*
-		lookup := s.FSIndexerService.Lookup(request.ImageDigest, request.Path)
-			if lookup == nil {
-				return nil, status.Error(codes.NotFound, "path not found")
-			}
-
-			proto := lookup.ToProto()
-			return &fspb.GetAttrResponse{
-				Attributes: proto.Attributes,
-			}, nil
-	*/
-
 	entriesByPrefix := s.FSIndexerService.LookupByPrefix(request.ImageDigest, request.Path)
-	var entries []*fspb.DirEntry
+	var entries []*fspb.File
 	for _, entry := range entriesByPrefix {
-		entries = append(entries, &fspb.DirEntry{
-			Path:       entry.Path,
-			Attributes: entry.ToProto().Attributes,
+		e := entry.ToProto()
+		entries = append(entries, &fspb.File{
+			Path:          entry.Path,
+			Attributes:    e.Attributes,
+			SymlinkTarget: e.SymlinkTarget,
 		})
 	}
 
