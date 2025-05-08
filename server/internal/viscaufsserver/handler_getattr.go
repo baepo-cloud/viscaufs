@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s Server) GetAttr(_ context.Context, request *fspb.GetAttrRequest) (*fspb.GetAttrResponse, error) {
+func (s Server) GetAttr(ctx context.Context, request *fspb.GetAttrRequest) (*fspb.GetAttrResponse, error) {
 	if request.Path == "/" {
 		// Create hardcoded attributes for root directory
 		rootAttrs := &fspb.FileAttributes{
@@ -39,7 +39,7 @@ func (s Server) GetAttr(_ context.Context, request *fspb.GetAttrRequest) (*fspb.
 		}, nil
 	}
 
-	lookup := s.FSIndexerService.Lookup(request.ImageDigest, request.Path)
+	lookup := s.FSIndexerService.Lookup(ctx, request.ImageDigest, request.Path)
 	if lookup == nil {
 		return nil, status.Error(codes.NotFound, "path not found")
 	}

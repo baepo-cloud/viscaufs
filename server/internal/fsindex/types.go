@@ -49,6 +49,8 @@ type FSIndex struct {
 	Trie         art.Tree
 	withoutFiles map[string]struct{}
 	withoutDirs  map[string]struct{}
+
+	Finished bool
 }
 
 func (f *FSNode) ToProto() *fspb.FSNode {

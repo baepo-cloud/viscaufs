@@ -47,21 +47,28 @@ message ReadDirResponse {
 message OpenRequest {
   string path = 1;
   uint32 flags = 2;
+  string image_digest = 3;
 }
 
 message OpenResponse {
-  uint64 handle = 1;
+  string uid = 1;
 }
 
 message ReadRequest {
-  uint64 handle = 1;
-  uint64 offset = 2;
+  string uid = 1;
+  int64 offset = 2;
   uint32 size = 3;
 }
 
 message ReadResponse {
   bytes data = 1;
 }
+
+message ReleaseRequest {
+  string uid = 1;
+}
+
+message ReleaseResponse {}
 
 // FuseService defines the FUSE filesystem service
 service FuseService {
@@ -82,4 +89,6 @@ service FuseService {
 
   // Read reads data from an open file
   rpc Read(ReadRequest) returns (ReadResponse) {}
+
+  rpc Release(ReleaseRequest) returns (ReleaseResponse) {}
 }

@@ -1,6 +1,7 @@
 package fsindexservice
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -62,6 +63,9 @@ func (s *Service) CreateImageIndexChannel(imageDigest string) chan<- types.FileS
 				slog.Duration("duration", time.Since(nowLayer)),
 				slog.String("layer_digest", layer.Digest))
 
+			if layer.Position == 0 {
+				imageFSIndex.Finished = true
+			}
 			s.imageDigestToFSIndex.Set(imageDigest, imageFSIndex)
 		}
 
@@ -71,6 +75,7 @@ func (s *Service) CreateImageIndexChannel(imageDigest string) chan<- types.FileS
 				s.logger.Error("failed to serialize image fs index", slog.String("image_digest", imageDigest), slog.Any("error", err))
 				return
 			}
+
 			err = s.db.Model(&types.Image{}).Where("digest = ?", imageDigest).Update("fs_index", serializeFSIndex).Error
 			if err != nil {
 				s.logger.Error("failed to update image fs index", slog.String("image_digest", imageDigest), slog.Any("error", err))
@@ -142,30 +147,76 @@ func (s *Service) BuildLayerIndex(path, layerDigest string) ([]byte, error) {
 	return serializedFileSystemIndex, nil
 }
 
-func (s *Service) Lookup(imageDigest, path string) *fsindex.FSNode {
-	imageFSIndex, ok := s.imageDigestToFSIndex.Get(imageDigest)
-	if !ok {
-		return nil
-	}
+// Lookup attempts to lookup a path in the filesystem index
+// and retries if the index is still being built, unless context is done
+func (s *Service) Lookup(ctx context.Context, imageDigest, path string) *fsindex.FSNode {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// Proceed with lookup
+		}
 
-	node, err := imageFSIndex.LookupPath(path)
-	if node == nil || err != nil {
-		return nil
-	}
+		imageFSIndex, ok := s.imageDigestToFSIndex.Get(imageDigest)
+		if !ok {
+			if !s.Ready(imageDigest) {
+				return nil
+			}
+			continue
+		}
 
-	return node
+		node, err := imageFSIndex.LookupPath(path)
+		if node != nil && err == nil {
+			return node
+		}
+
+		if imageFSIndex.Finished {
+			return nil
+		}
+
+		// Index is still building, wait a bit and retry
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
 }
 
-func (s *Service) LookupByPrefix(imageDigest, path string) []*fsindex.FSNode {
-	imageFSIndex, ok := s.imageDigestToFSIndex.Get(imageDigest)
-	if !ok {
-		return nil
-	}
+// LookupByPrefix attempts to lookup paths with a prefix in the filesystem index
+// and retries if the index is still being built, unless context is done
+func (s *Service) LookupByPrefix(ctx context.Context, imageDigest, path string) []*fsindex.FSNode {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// Proceed with lookup
+		}
 
-	nodes := imageFSIndex.LookupPrefixSearch(path)
-	if nodes == nil {
-		return nil
-	}
+		imageFSIndex, ok := s.imageDigestToFSIndex.Get(imageDigest)
+		if !ok {
+			if !s.Ready(imageDigest) {
+				return nil
+			}
+			continue
+		}
 
-	return nodes
+		nodes := imageFSIndex.LookupPrefixSearch(path)
+		if nodes != nil && len(nodes) > 0 {
+			return nodes
+		}
+
+		if imageFSIndex.Finished {
+			return nil
+		}
+
+		// Index is still building, wait a bit and retry
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
 }

@@ -1,9 +1,14 @@
 package main
 
 import (
+	"log/slog"
+	"os"
+	"time"
+
 	"github.com/baepo-cloud/viscaufs-server/internal/config"
 	"github.com/baepo-cloud/viscaufs-server/internal/fsindex"
 	"github.com/baepo-cloud/viscaufs-server/internal/fxutil"
+	"github.com/baepo-cloud/viscaufs-server/internal/service/filehandlerservice"
 	"github.com/baepo-cloud/viscaufs-server/internal/service/fsindexservice"
 	"github.com/baepo-cloud/viscaufs-server/internal/service/imgservice"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
@@ -12,9 +17,6 @@ import (
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
-	"log/slog"
-	"os"
-	"time"
 )
 
 func main() {
@@ -25,6 +27,7 @@ func main() {
 		fx.Provide(config.ParseConfig),
 		fx.Provide(fx.Annotate(fsindexservice.NewService, fx.As(new(types.FileSystemIndexService)))),
 		fx.Provide(fx.Annotate(imgservice.NewService, fx.As(new(types.ImageService)))),
+		fx.Provide(fx.Annotate(filehandlerservice.NewService, fx.As(new(types.FileHandlerService)))),
 		fx.Provide(viscaufsserver.New),
 		fx.Invoke(func(server *grpc.Server) {}),
 		fx.Invoke(func(db *gorm.DB) {

@@ -27,12 +27,19 @@ type Node struct {
 	SymlinkTarget *string
 }
 
+type FileHandle struct {
+	Uid string
+}
+
 // Ensure interfaces are implemented
 var (
 	_ fs.NodeGetattrer  = (*Node)(nil)
 	_ fs.NodeLookuper   = (*Node)(nil)
 	_ fs.NodeReaddirer  = (*Node)(nil)
 	_ fs.NodeReadlinker = (*Node)(nil)
+	_ fs.NodeOpener     = (*Node)(nil)
+	_ fs.NodeReader     = (*Node)(nil)
+	_ fs.NodeReleaser   = (*Node)(nil)
 )
 
 // Getattr implementation
@@ -151,4 +158,19 @@ func (n *Node) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 	}
 
 	return []byte(*n.SymlinkTarget), 0
+}
+
+func (n *Node) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (n *Node) Read(ctx context.Context, f fs.FileHandle, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (n *Node) Release(ctx context.Context, f fs.FileHandle) syscall.Errno {
+	//TODO implement me
+	panic("implement me")
 }

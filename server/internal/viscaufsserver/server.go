@@ -10,36 +10,19 @@ import (
 )
 
 type Server struct {
-	ImageService     types.ImageService
-	FSIndexerService types.FileSystemIndexService
+	ImageService       types.ImageService
+	FSIndexerService   types.FileSystemIndexService
+	FileHandlerService types.FileHandlerService
 
 	fspb.UnimplementedFuseServiceServer
 }
 
 var _ fspb.FuseServiceServer = (*Server)(nil)
 
-func New(imageService types.ImageService, fsIndexerService types.FileSystemIndexService) *Server {
+func New(imageService types.ImageService, fsIndexerService types.FileSystemIndexService, fhService types.FileHandlerService) *Server {
 	return &Server{
-		ImageService:     imageService,
-		FSIndexerService: fsIndexerService,
+		ImageService:       imageService,
+		FSIndexerService:   fsIndexerService,
+		FileHandlerService: fhService,
 	}
-}
-
-func (s Server) ImageReady(_ context.Context, request *fspb.ImageReadyRequest) (*fspb.ImageReadyResponse, error) {
-	ready := s.FSIndexerService.Ready(request.ImageDigest)
-	if !ready {
-		return nil, status.Error(codes.FailedPrecondition, "image not ready")
-	}
-
-	return &fspb.ImageReadyResponse{}, nil
-}
-
-func (s Server) Open(ctx context.Context, request *fspb.OpenRequest) (*fspb.OpenResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s Server) Read(ctx context.Context, request *fspb.ReadRequest) (*fspb.ReadResponse, error) {
-	//TODO implement me
-	panic("implement me")
 }

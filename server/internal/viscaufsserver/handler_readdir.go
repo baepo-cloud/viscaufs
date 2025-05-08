@@ -7,7 +7,7 @@ import (
 )
 
 func (s Server) ReadDir(ctx context.Context, request *fspb.ReadDirRequest) (*fspb.ReadDirResponse, error) {
-	entriesByPrefix := s.FSIndexerService.LookupByPrefix(request.ImageDigest, request.Path)
+	entriesByPrefix := s.FSIndexerService.LookupByPrefix(ctx, request.ImageDigest, request.Path)
 	var entries []*fspb.File
 	for _, entry := range entriesByPrefix {
 		e := entry.ToProto()

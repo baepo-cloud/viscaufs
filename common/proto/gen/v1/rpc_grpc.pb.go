@@ -25,6 +25,7 @@ const (
 	FuseService_ReadDir_FullMethodName      = "/baepo.viscaufs.fs.v1.FuseService/ReadDir"
 	FuseService_Open_FullMethodName         = "/baepo.viscaufs.fs.v1.FuseService/Open"
 	FuseService_Read_FullMethodName         = "/baepo.viscaufs.fs.v1.FuseService/Read"
+	FuseService_Release_FullMethodName      = "/baepo.viscaufs.fs.v1.FuseService/Release"
 )
 
 // FuseServiceClient is the client API for FuseService service.
@@ -43,6 +44,7 @@ type FuseServiceClient interface {
 	Open(ctx context.Context, in *OpenRequest, opts ...grpc.CallOption) (*OpenResponse, error)
 	// Read reads data from an open file
 	Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error)
+	Release(ctx context.Context, in *ReleaseRequest, opts ...grpc.CallOption) (*ReleaseResponse, error)
 }
 
 type fuseServiceClient struct {
@@ -107,6 +109,15 @@ func (c *fuseServiceClient) Read(ctx context.Context, in *ReadRequest, opts ...g
 	return out, nil
 }
 
+func (c *fuseServiceClient) Release(ctx context.Context, in *ReleaseRequest, opts ...grpc.CallOption) (*ReleaseResponse, error) {
+	out := new(ReleaseResponse)
+	err := c.cc.Invoke(ctx, FuseService_Release_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FuseServiceServer is the server API for FuseService service.
 // All implementations must embed UnimplementedFuseServiceServer
 // for forward compatibility
@@ -123,6 +134,7 @@ type FuseServiceServer interface {
 	Open(context.Context, *OpenRequest) (*OpenResponse, error)
 	// Read reads data from an open file
 	Read(context.Context, *ReadRequest) (*ReadResponse, error)
+	Release(context.Context, *ReleaseRequest) (*ReleaseResponse, error)
 	mustEmbedUnimplementedFuseServiceServer()
 }
 
@@ -147,6 +159,9 @@ func (UnimplementedFuseServiceServer) Open(context.Context, *OpenRequest) (*Open
 }
 func (UnimplementedFuseServiceServer) Read(context.Context, *ReadRequest) (*ReadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
+}
+func (UnimplementedFuseServiceServer) Release(context.Context, *ReleaseRequest) (*ReleaseResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Release not implemented")
 }
 func (UnimplementedFuseServiceServer) mustEmbedUnimplementedFuseServiceServer() {}
 
@@ -269,6 +284,24 @@ func _FuseService_Read_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FuseService_Release_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReleaseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FuseServiceServer).Release(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FuseService_Release_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FuseServiceServer).Release(ctx, req.(*ReleaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FuseService_ServiceDesc is the grpc.ServiceDesc for FuseService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -299,6 +332,10 @@ var FuseService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Read",
 			Handler:    _FuseService_Read_Handler,
+		},
+		{
+			MethodName: "Release",
+			Handler:    _FuseService_Release_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
