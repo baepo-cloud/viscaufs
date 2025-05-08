@@ -11,6 +11,7 @@ import (
 	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
 	"github.com/baepo-cloud/viscaufs-server/db/migrations"
 	"github.com/baepo-cloud/viscaufs-server/internal/config"
+	"github.com/baepo-cloud/viscaufs-server/internal/helper"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
 	"github.com/baepo-cloud/viscaufs-server/internal/viscaufsserver"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
@@ -23,8 +24,9 @@ import (
 
 func ProvideGRPCServer(lc fx.Lifecycle, cfg *config.Config, server *viscaufsserver.Server) *grpc.Server {
 	grpcServer := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(logging.UnaryServerInterceptor(interceptorLogger(slog.Default()))),
-		grpc.ChainStreamInterceptor(logging.StreamServerInterceptor(interceptorLogger(slog.Default()))))
+		grpc.ChainUnaryInterceptor(helper.UnaryServerInterceptorLogger()),
+		grpc.ChainStreamInterceptor(helper.StreamServerInterceptorLogger()),
+	)
 	fspb.RegisterFuseServiceServer(grpcServer, server)
 
 	lc.Append(fx.Hook{
