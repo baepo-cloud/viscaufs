@@ -1,6 +1,7 @@
 package viscaufs
 
 import (
+	"log/slog"
 	"sync"
 
 	"github.com/alphadose/haxmap"
@@ -26,6 +27,7 @@ func (c *Cache) GetOrFetchAttr(path string, fetch func() (*fspb.GetAttrResponse,
 	c.m.RLock()
 	if file, err := c.indexAttrs.LookupPath(path); err == nil && file != nil {
 		c.m.RUnlock()
+		slog.Info("cache: hit on file", "path", path, "operation", "getattr")
 		return &fspb.File{
 			Path:          path,
 			Attributes:    file.FileAttributesToProto(),
@@ -55,6 +57,7 @@ func (c *Cache) GetOrFetchDir(path string, fetch func() (*fspb.ReadDirResponse, 
 	_, ok := c.readDirs.Get(path)
 	var files []*fspb.File
 	if ok {
+		slog.Info("cache: hit on dir", "path", path, "operation", "readdir")
 		c.m.RLock()
 		search := c.indexAttrs.LookupPrefixSearch(path)
 		c.m.RUnlock()

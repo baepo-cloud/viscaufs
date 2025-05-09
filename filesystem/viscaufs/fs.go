@@ -3,6 +3,7 @@ package viscaufs
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,7 +57,7 @@ func (n *Node) Getattr(ctx context.Context, _ fs.FileHandle, out *fuse.AttrOut) 
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG: GetAttr error: %v\n", err)
+		slog.Info("getattr: error", "path", n.Path, "err", err)
 		return syscall.ENOENT
 	}
 
@@ -72,8 +73,6 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 		childPath = "/" + childPath
 	}
 
-	fmt.Fprintf(os.Stderr, "DEBUG: Lookup called for Path: %s\n", childPath)
-
 	file, err := n.FS.Cache.GetOrFetchAttr(n.Path, func() (*fspb.GetAttrResponse, error) {
 		return n.FS.Client.GetAttr(ctx, &fspb.GetAttrRequest{
 			Path:        n.Path,
@@ -82,7 +81,7 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG: GetAttr error: %v\n", err)
+		slog.Info("lookup: error", "path", n.Path, "err", err)
 		return nil, syscall.ENOENT
 	}
 
@@ -114,7 +113,7 @@ func (n *Node) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG: ReadDir error: %v\n", err)
+		slog.Error("readdir: error", "path", n.Path, "err", err)
 		return nil, syscall.EIO
 	}
 
@@ -177,7 +176,7 @@ func (n *Node) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuseFl
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG: Open error: %v\n", err)
+		slog.Error("open: error", "path", n.Path, "err", err)
 		return nil, 0, syscall.EIO
 	}
 
@@ -201,7 +200,7 @@ func (n *Node) Read(ctx context.Context, f fs.FileHandle, dest []byte, off int64
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG: Read error: %v\n", err)
+		slog.Error("read: error", "path", n.Path, "err", err)
 		return nil, syscall.EIO
 	}
 
@@ -219,7 +218,7 @@ func (n *Node) Release(ctx context.Context, f fs.FileHandle) syscall.Errno {
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG: Release error: %v\n", err)
+		slog.Error("release: error", "path", n.Path, "err", err)
 		return syscall.EIO
 	}
 
