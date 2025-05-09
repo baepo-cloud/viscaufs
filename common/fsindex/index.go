@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	art "github.com/plar/go-adaptive-radix-tree/v2"
+	art "github.com/alexisvisco/go-adaptive-radix-tree/v2"
 )
 
 // NewFSIndex creates a new filesystem index
@@ -73,6 +73,11 @@ func (idx *Index) BuildIndex(rootDir string) error {
 
 	return nil
 }
+
+func (idx *Index) AddNode(node *Node) {
+	idx.Trie.Insert(art.Key(node.Path), node)
+}
+
 func collectFileAttributes(info os.FileInfo) FileAttributes {
 	stat := info.Sys().(*syscall.Stat_t)
 
@@ -130,28 +135,19 @@ func (idx *Index) LookupPrefixSearch(prefix string) []*Node {
 
 	var results []*Node
 	prefixKey := art.Key(prefix)
-	prefixLen := len(prefix)
-
-	idx.Trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
+	forEachPrefixWithDepth(idx.Trie, prefixKey, func(node art.NodeKV) bool {
 		nodePath := string(node.Key())
 
 		// Skip the prefix node itself
 		if nodePath == prefix {
 			return true
 		}
-
-		// Calculate the relative path from the prefix
-		relPath := nodePath[prefixLen:]
-
-		// Only include direct children (no additional slashes in the relative path)
-		if !strings.Contains(relPath, "/") {
-			if fsNode, ok := node.Value().(*Node); ok {
-				results = append(results, fsNode)
-			}
+		if fsNode, ok := node.Value().(*Node); ok {
+			results = append(results, fsNode)
 		}
 
 		return true
-	})
+	}, art.TraverseLeaf, 0)
 
 	return results
 }
@@ -160,7 +156,7 @@ func (idx *Index) LookupPrefixSearch(prefix string) []*Node {
 func (idx *Index) GetStats() map[string]interface{} {
 	var totalFiles, totalDirs int
 
-	idx.Trie.ForEach(func(node art.Node) (cont bool) {
+	idx.Trie.ForEach(func(node art.NodeKV) (cont bool) {
 		val := node.Value()
 		if val == nil {
 			return true

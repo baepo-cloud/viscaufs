@@ -74,11 +74,12 @@ Image: nginx:latest
 ## Project Structure
 
 ```
-├── filesystem/     # FUSE client implementation
+├── common
+│   ├── proto/           # Protocol buffers GRPC definitions
+│   ├── fsindex/         # Indexing library for filesystem images
+├── filesystem/          # FUSE client implementation
 ├── server/
 │   ├── internal/
-│   │   ├── fsindex/     # Layer indexing engine
 │   │   ├── service/     # Core services
 │   │   └── types/       # Data models
-└── common/        # Shared protobuf definitions
 ```

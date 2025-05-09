@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	art "github.com/plar/go-adaptive-radix-tree/v2"
+	art "github.com/alexisvisco/go-adaptive-radix-tree/v2"
 )
 
 // JoinFSIndex merges two Index instances.

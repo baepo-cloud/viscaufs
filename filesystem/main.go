@@ -4,12 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/hanwen/go-fuse/v2/fuse"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/hanwen/go-fuse/v2/fuse"
 
 	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
 	"github.com/baepo-cloud/viscaufs-fs/viscaufs"
@@ -59,6 +60,8 @@ func main() {
 	vfs := &viscaufs.FS{
 		Client:      client,
 		ImageDigest: imageDigest,
+		Cache:       viscaufs.NewCache(),
+		MountPath:   mountPoint,
 	}
 
 	// Create the root node directly

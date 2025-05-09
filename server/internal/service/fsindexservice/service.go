@@ -3,11 +3,12 @@ package fsindexservice
 import (
 	"context"
 	"fmt"
-	"github.com/baepo-cloud/viscaufs-common/fsindex"
 	"log"
 	"log/slog"
 	"slices"
 	"time"
+
+	"github.com/baepo-cloud/viscaufs-common/fsindex"
 
 	"github.com/alphadose/haxmap"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
@@ -208,7 +209,6 @@ func (s *Service) LookupByPrefix(ctx context.Context, imageDigest, path string) 
 			return nodes
 		}
 
-		fmt.Println("FINISHED?", imageFSIndex.IsComplete)
 		if imageFSIndex.IsComplete {
 			return nil
 		}

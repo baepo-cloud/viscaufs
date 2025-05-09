@@ -17,6 +17,8 @@ import (
 type FS struct {
 	Client      fspb.FuseServiceClient
 	ImageDigest string
+	MountPath   string
+	Cache       *Cache
 }
 
 // Node directly implements FS interfaces
@@ -46,9 +48,11 @@ var (
 func (n *Node) Getattr(ctx context.Context, _ fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	fmt.Fprintf(os.Stderr, "DEBUG: Getattr called for Path: %s\n", n.Path)
 
-	resp, err := n.FS.Client.GetAttr(ctx, &fspb.GetAttrRequest{
-		Path:        n.Path,
-		ImageDigest: n.FS.ImageDigest,
+	file, err := n.FS.Cache.GetOrFetchAttr(n.Path, func() (*fspb.GetAttrResponse, error) {
+		return n.FS.Client.GetAttr(ctx, &fspb.GetAttrRequest{
+			Path:        n.Path,
+			ImageDigest: n.FS.ImageDigest,
+		})
 	})
 
 	if err != nil {
@@ -56,7 +60,8 @@ func (n *Node) Getattr(ctx context.Context, _ fs.FileHandle, out *fuse.AttrOut) 
 		return syscall.ENOENT
 	}
 
-	AttrFromProto(&out.Attr, resp.File.Attributes)
+	AttrFromProto(&out.Attr, file.Attributes)
+
 	return 0
 }
 
@@ -69,27 +74,29 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 
 	fmt.Fprintf(os.Stderr, "DEBUG: Lookup called for Path: %s\n", childPath)
 
-	resp, err := n.FS.Client.GetAttr(ctx, &fspb.GetAttrRequest{
-		Path:        childPath,
-		ImageDigest: n.FS.ImageDigest,
+	file, err := n.FS.Cache.GetOrFetchAttr(n.Path, func() (*fspb.GetAttrResponse, error) {
+		return n.FS.Client.GetAttr(ctx, &fspb.GetAttrRequest{
+			Path:        n.Path,
+			ImageDigest: n.FS.ImageDigest,
+		})
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG: Lookup error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "DEBUG: GetAttr error: %v\n", err)
 		return nil, syscall.ENOENT
 	}
 
-	AttrFromProto(&out.Attr, resp.File.Attributes)
+	AttrFromProto(&out.Attr, file.Attributes)
 
 	child := &Node{
 		FS:            n.FS,
 		Path:          childPath,
-		SymlinkTarget: resp.File.SymlinkTarget,
+		SymlinkTarget: file.SymlinkTarget,
 	}
 
 	childInode := n.NewInode(ctx, child, fs.StableAttr{
-		Mode: resp.File.Attributes.Mode,
-		Ino:  resp.File.Attributes.Inode,
+		Mode: file.Attributes.Mode,
+		Ino:  file.Attributes.Inode,
 	})
 
 	return childInode, 0
@@ -99,9 +106,11 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 func (n *Node) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	fmt.Fprintf(os.Stderr, "DEBUG: Readdir called for Path: %s\n", n.Path)
 
-	resp, err := n.FS.Client.ReadDir(ctx, &fspb.ReadDirRequest{
-		Path:        n.Path,
-		ImageDigest: n.FS.ImageDigest,
+	files, err := n.FS.Cache.GetOrFetchDir(n.Path, func() (*fspb.ReadDirResponse, error) {
+		return n.FS.Client.ReadDir(ctx, &fspb.ReadDirRequest{
+			Path:        n.Path,
+			ImageDigest: n.FS.ImageDigest,
+		})
 	})
 
 	if err != nil {
@@ -109,7 +118,7 @@ func (n *Node) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 		return nil, syscall.EIO
 	}
 
-	entries := make([]fuse.DirEntry, 0, len(resp.Entries)+2)
+	entries := make([]fuse.DirEntry, 0, len(files)+2)
 
 	entries = append(entries, fuse.DirEntry{
 		Name: ".",
@@ -126,7 +135,7 @@ func (n *Node) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 		})
 	}
 
-	for _, entry := range resp.Entries {
+	for _, entry := range files {
 		name := filepath.Base(entry.Path)
 		if name == "" || name == "." || name == ".." {
 			continue
@@ -157,7 +166,7 @@ func (n *Node) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 		return nil, syscall.ENOENT
 	}
 
-	return []byte(*n.SymlinkTarget), 0
+	return []byte(filepath.Join(n.FS.MountPath, *n.SymlinkTarget)), 0
 }
 
 func (n *Node) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {

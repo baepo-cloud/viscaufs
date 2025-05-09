@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	art "github.com/plar/go-adaptive-radix-tree/v2"
+	art "github.com/alexisvisco/go-adaptive-radix-tree/v2"
 )
 
 // String returns a string representation of the Index as a tree
