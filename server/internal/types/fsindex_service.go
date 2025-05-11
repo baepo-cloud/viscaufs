@@ -2,7 +2,7 @@ package types
 
 import (
 	"context"
-	"github.com/baepo-cloud/viscaufs-common/fsindex"
+	"github.com/baepo-cloud/viscaufs/common/fsindex"
 )
 
 type (

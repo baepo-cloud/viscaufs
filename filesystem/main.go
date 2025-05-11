@@ -11,8 +11,8 @@ import (
 
 	"github.com/hanwen/go-fuse/v2/fuse"
 
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
 	"github.com/baepo-cloud/viscaufs-fs/viscaufs"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

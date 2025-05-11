@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/baepo-cloud/viscaufs-common/fsindex"
+	"github.com/baepo-cloud/viscaufs/common/fsindex"
 	"io"
 	"log"
 	"log/slog"

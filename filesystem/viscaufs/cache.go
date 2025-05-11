@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/alphadose/haxmap"
-	"github.com/baepo-cloud/viscaufs-common/fsindex"
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
+	"github.com/baepo-cloud/viscaufs/common/fsindex"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 )
 
 type Cache struct {

@@ -3,7 +3,7 @@ package viscaufsserver
 import (
 	"context"
 
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 )
 
 func (s Server) ReadDir(ctx context.Context, request *fspb.ReadDirRequest) (*fspb.ReadDirResponse, error) {

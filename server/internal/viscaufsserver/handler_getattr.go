@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

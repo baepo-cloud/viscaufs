@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

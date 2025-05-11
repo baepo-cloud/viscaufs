@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 )

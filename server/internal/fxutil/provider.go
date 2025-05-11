@@ -8,12 +8,12 @@ import (
 	"os"
 	"path/filepath"
 
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
 	"github.com/baepo-cloud/viscaufs-server/db/migrations"
 	"github.com/baepo-cloud/viscaufs-server/internal/config"
 	"github.com/baepo-cloud/viscaufs-server/internal/helper"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
 	"github.com/baepo-cloud/viscaufs-server/internal/viscaufsserver"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"

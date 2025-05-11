@@ -8,7 +8,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/baepo-cloud/viscaufs-common/fsindex"
+	"github.com/baepo-cloud/viscaufs/common/fsindex"
 
 	"github.com/alphadose/haxmap"
 	"github.com/baepo-cloud/viscaufs-server/internal/types"
