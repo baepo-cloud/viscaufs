@@ -7,31 +7,6 @@ import (
 	art "github.com/alexisvisco/go-adaptive-radix-tree/v2"
 )
 
-func forEachPrefixWithDepth(tree art.Tree, key art.Key, callback art.Callback, opts int, maxDepth int) {
-	opts &= art.TraverseLeaf | art.TraverseReverse // keep only LeafKind and reverse options
-
-	tree.ForEach(func(n art.NodeKV) bool {
-		current, ok := n.(*art.NodeRef)
-		if !ok {
-			return false
-		}
-
-		if leaf := current.Leaf(); leaf.PrefixMatch(key) {
-
-			depths := numberOfSlashesFromPrefix(key, current.Key())
-			if depths > maxDepth {
-				// Skip this node if it exceeds the depth limit, but continue searching
-				return true
-			}
-
-			return callback(current)
-		}
-
-		return true
-	}, opts)
-
-}
-
 // numberOfSlashesFromPrefix counts how many slashes are in 'current' after the 'key' prefix.
 func numberOfSlashesFromPrefix(prefix, current art.Key) int {
 	// Remove trailing slash from prefix if present (unless it's root)
