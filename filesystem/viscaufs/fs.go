@@ -73,9 +73,9 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 		childPath = "/" + childPath
 	}
 
-	file, err := n.FS.Cache.GetOrFetchAttr(n.Path, func() (*fspb.GetAttrResponse, error) {
+	file, err := n.FS.Cache.GetOrFetchAttr(childPath, func() (*fspb.GetAttrResponse, error) {
 		return n.FS.Client.GetAttr(ctx, &fspb.GetAttrRequest{
-			Path:        n.Path,
+			Path:        childPath,
 			ImageDigest: n.FS.ImageDigest,
 		})
 	})
@@ -93,7 +93,7 @@ func (n *Node) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs
 		SymlinkTarget: file.SymlinkTarget,
 	}
 
-	childInode := n.NewInode(ctx, child, fs.StableAttr{
+	childInode := n.NewPersistentInode(ctx, child, fs.StableAttr{
 		Mode: file.Attributes.Mode,
 		Ino:  file.Attributes.Inode,
 	})
@@ -160,6 +160,8 @@ func (n *Node) Readlink(_ context.Context) ([]byte, syscall.Errno) {
 	if n.StableAttr().Mode&syscall.S_IFMT != syscall.S_IFLNK {
 		return nil, syscall.EINVAL
 	}
+
+	fmt.Sprintf("ASKING CACHE FOR SYMLINK: %s", n.Path)
 
 	if n.SymlinkTarget == nil {
 		return nil, syscall.ENOENT

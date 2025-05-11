@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -73,24 +72,23 @@ func main() {
 	// Setup FUSE options
 	opts := &fs.Options{
 		MountOptions: fuse.MountOptions{
-			Debug:         true,
-			Name:          "viscaufs",
-			FsName:        "viscaufs",
-			DisableXAttrs: true,
+			Debug:                true,
+			Name:                 "viscaufs",
+			FsName:               "viscaufs",
+			RememberInodes:       true,
+			EnableSymlinkCaching: true,
+			DisableXAttrs:        true,
 		},
 	}
-
-	fmt.Fprintf(os.Stderr, "DEBUG: About to mount filesystem at %s\n", mountPoint)
 
 	// Mount the filesystem
 	server, err := fs.Mount(mountPoint, rootNode, opts)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Mount failed: %v\n", err)
+		slog.Error("failed to mount filesystem", "error", err)
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(os.Stderr, "DEBUG: Filesystem mounted successfully\n")
-	fmt.Println("mounted successfully")
+	slog.Info("successfully mounted filesystem", "mount_point", mountPoint)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

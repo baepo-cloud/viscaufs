@@ -1,7 +1,6 @@
 package fsindex
 
 import (
-	"fmt"
 	"os"
 	"syscall"
 	"testing"
@@ -23,7 +22,7 @@ func createMockFileInfo(isDir bool) os.FileInfo {
 		Ino:     12345,
 		Size:    1024,
 		Blocks:  8,
-		Mode:    uint16(mode),
+		Mode:    uint32(mode),
 		Nlink:   1,
 		Uid:     1000,
 		Gid:     1000,
@@ -33,9 +32,9 @@ func createMockFileInfo(isDir bool) os.FileInfo {
 
 	// Set timestamps
 	now := time.Now()
-	statT.Atimespec = syscall.Timespec{Sec: now.Unix(), Nsec: int64(now.Nanosecond())}
-	statT.Mtimespec = syscall.Timespec{Sec: now.Unix(), Nsec: int64(now.Nanosecond())}
-	statT.Ctimespec = syscall.Timespec{Sec: now.Unix(), Nsec: int64(now.Nanosecond())}
+	statT.Atim = syscall.Timespec{Sec: now.Unix(), Nsec: int64(now.Nanosecond())}
+	statT.Mtim = syscall.Timespec{Sec: now.Unix(), Nsec: int64(now.Nanosecond())}
+	statT.Ctim = syscall.Timespec{Sec: now.Unix(), Nsec: int64(now.Nanosecond())}
 
 	return mockFileInfo{
 		name:    "test",
@@ -99,8 +98,6 @@ func TestJoinFSIndex(t *testing.T) {
 	JoinFSIndex(layer0, layer1, 0, false)
 	result := layer0
 
-	fmt.Println(layer0.String())
-
 	// Check that new files are added
 	file3, err := result.LookupPath("file3.txt")
 	require.NoError(t, err, "Expected file3.txt to be added")
@@ -148,5 +145,4 @@ func TestJoinFSIndex(t *testing.T) {
 	file5, err := result.LookupPath("file5.txt")
 	require.NoError(t, err, "Expected file5.txt to exist")
 	assert.Equal(t, uint8(2), file5.LayerPosition)
-
 }

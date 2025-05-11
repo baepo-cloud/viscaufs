@@ -29,9 +29,9 @@ func (c *Cache) GetOrFetchAttr(path string, fetch func() (*fspb.GetAttrResponse,
 		c.m.RUnlock()
 		slog.Info("cache: hit on file", "path", path, "operation", "getattr")
 		return &fspb.File{
-			Path:          path,
+			Path:          file.Path,
 			Attributes:    file.FileAttributesToProto(),
-			SymlinkTarget: nil,
+			SymlinkTarget: file.SymlinkTarget,
 		}, nil
 	}
 	c.m.RUnlock()
@@ -41,7 +41,7 @@ func (c *Cache) GetOrFetchAttr(path string, fetch func() (*fspb.GetAttrResponse,
 
 		c.m.Lock()
 		c.indexAttrs.AddNode(&fsindex.Node{
-			Path:          path,
+			Path:          resp.File.Path,
 			Attributes:    fsindex.FSFileAttrFromProto(resp.File.Attributes),
 			SymlinkTarget: resp.File.SymlinkTarget,
 		})
@@ -80,7 +80,7 @@ func (c *Cache) GetOrFetchDir(path string, fetch func() (*fspb.ReadDirResponse, 
 		for _, file := range files {
 			c.m.Lock()
 			c.indexAttrs.AddNode(&fsindex.Node{
-				Path:          path,
+				Path:          file.Path,
 				Attributes:    fsindex.FSFileAttrFromProto(file.Attributes),
 				SymlinkTarget: file.SymlinkTarget,
 			})

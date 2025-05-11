@@ -4,7 +4,7 @@ import (
 	"syscall"
 
 	art "github.com/alexisvisco/go-adaptive-radix-tree/v2"
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 )
 
 // Node represents a node in our filesystem index

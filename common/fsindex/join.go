@@ -20,7 +20,7 @@ import (
 // JoinFSIndex(LAYER 1, LAYER 2, 1, true) = LAYER 1 -> the merged layer
 // JoinFSIndex(LAYER 0, LAYER 1, 0, false) = LAYER 0 -> the merged layer
 func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *Index, currentLayerPosition uint8, firstJoin bool) {
-	currentLayerFSIndex.Trie.ForEach(func(node art.Node) (cont bool) {
+	currentLayerFSIndex.Trie.ForEach(func(node art.NodeKV) (cont bool) {
 		fsNode, ok := node.Value().(*Node)
 		if ok {
 			fsNode.LayerPosition = currentLayerPosition
@@ -30,7 +30,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *Index, currentLayerPosi
 	})
 
 	if firstJoin {
-		applyLayerFSIndex.Trie.ForEach(func(node art.Node) (cont bool) {
+		applyLayerFSIndex.Trie.ForEach(func(node art.NodeKV) (cont bool) {
 			fsNode, ok := node.Value().(*Node)
 			if ok {
 				fsNode.LayerPosition = currentLayerPosition + 1
@@ -75,7 +75,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *Index, currentLayerPosi
 		var keysToDelete []art.Key
 
 		// Find all keys that need to be deleted
-		currentLayerFSIndex.Trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
+		currentLayerFSIndex.Trie.ForEachPrefix(prefixKey, func(node art.NodeKV) bool {
 			keysToDelete = append(keysToDelete, node.Key())
 			return true
 		})
@@ -105,7 +105,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *Index, currentLayerPosi
 			var keysToDelete []art.Key
 
 			// Find all keys that need to be deleted
-			currentLayerFSIndex.Trie.ForEachPrefix(prefixKey, func(node art.Node) bool {
+			currentLayerFSIndex.Trie.ForEachPrefix(prefixKey, func(node art.NodeKV) bool {
 				nodePath := string(node.Key())
 				// Don't delete the directory itself
 				if nodePath != opaqueDir && strings.HasPrefix(nodePath, string(prefixKey)) {
@@ -122,7 +122,7 @@ func JoinFSIndex(currentLayerFSIndex, applyLayerFSIndex *Index, currentLayerPosi
 	}
 
 	// Add or override files from the new layer
-	applyLayerFSIndex.Trie.ForEach(func(node art.Node) bool {
+	applyLayerFSIndex.Trie.ForEach(func(node art.NodeKV) bool {
 		fsNode, ok := node.Value().(*Node)
 		if ok {
 			fileName := filepath.Base(fsNode.Path)

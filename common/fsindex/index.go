@@ -127,27 +127,27 @@ func (idx *Index) LookupPath(path string) (*Node, error) {
 func (idx *Index) LookupPrefixSearch(prefix string) []*Node {
 	prefix = filepath.ToSlash(filepath.Clean(prefix))
 
-	// Ensure prefix ends with a slash if it's not empty
-	// This ensures we're looking for children of the directory
-	if prefix != "" && !strings.HasSuffix(prefix, "/") {
-		prefix += "/"
-	}
-
 	var results []*Node
 	prefixKey := art.Key(prefix)
-	forEachPrefixWithDepth(idx.Trie, prefixKey, func(node art.NodeKV) bool {
-		nodePath := string(node.Key())
+	idx.Trie.ForEachPrefixWithSeparator(
+		prefixKey,
+		func(node art.NodeKV) bool {
+			nodePath := string(node.Key())
 
-		// Skip the prefix node itself
-		if nodePath == prefix {
+			// Skip the prefix node itself
+			if nodePath == prefix {
+				return true
+			}
+			if fsNode, ok := node.Value().(*Node); ok {
+				results = append(results, fsNode)
+			}
+
 			return true
-		}
-		if fsNode, ok := node.Value().(*Node); ok {
-			results = append(results, fsNode)
-		}
-
-		return true
-	}, art.TraverseLeaf, 0)
+		},
+		numberOfSlashesFromPrefix,
+		1,
+		false,
+	)
 
 	return results
 }

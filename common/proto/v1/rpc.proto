@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package baepo.viscaufs.fs.v1;
 
-option go_package = "github.com/baepo-cloud/viscaufs-common/fspb/v1;fspb";
+option go_package = "github.com/baepo-cloud/viscaufs/common/fspb/v1;fspb";
 
 import "v1/types.proto";
 

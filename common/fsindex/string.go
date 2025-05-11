@@ -2,7 +2,7 @@ package fsindex
 
 import (
 	"fmt"
-	"github.com/baepo-cloud/viscaufs-common/humanize"
+	"github.com/baepo-cloud/viscaufs/common/humanize"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -23,7 +23,7 @@ func (idx *Index) String() string {
 
 	// Collect all paths and sort them
 	var paths []nodeInfo
-	idx.Trie.ForEach(func(node art.Node) bool {
+	idx.Trie.ForEach(func(node art.NodeKV) (cont bool) {
 		path := string(node.Key())
 		fsNode, ok := node.Value().(*Node)
 		if ok {

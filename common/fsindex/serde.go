@@ -7,7 +7,7 @@ import (
 	"io"
 
 	art "github.com/alexisvisco/go-adaptive-radix-tree/v2"
-	fspb "github.com/baepo-cloud/viscaufs-common/proto/gen/v1"
+	fspb "github.com/baepo-cloud/viscaufs/common/proto/gen/v1"
 	protobuf "google.golang.org/protobuf/proto"
 )
 
@@ -22,7 +22,7 @@ func (idx *Index) Serialize() ([]byte, error) {
 		Paths:   make([]*fspb.FSIndexNode, 0),
 	}
 
-	idx.Trie.ForEach(func(node art.Node) bool {
+	idx.Trie.ForEach(func(node art.NodeKV) bool {
 		fsNode, ok := node.Value().(*Node)
 		if !ok {
 			return true

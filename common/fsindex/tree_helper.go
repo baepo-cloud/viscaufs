@@ -2,6 +2,7 @@ package fsindex
 
 import (
 	"bytes"
+	"path/filepath"
 
 	art "github.com/alexisvisco/go-adaptive-radix-tree/v2"
 )
@@ -31,46 +32,33 @@ func forEachPrefixWithDepth(tree art.Tree, key art.Key, callback art.Callback, o
 
 }
 
-func numberOfSlashesFromPrefix(key art.Key, current art.Key) int {
-	if len(key) == 1 && key[0] == '/' && len(current) > 1 {
-		// For root path, we count all slashes in the rest of the path
-		count := 0
-		for i := 1; i < len(current); i++ {
-			if current[i] == '/' {
-				count++
-			}
-		}
-		return count
+// numberOfSlashesFromPrefix counts how many slashes are in 'current' after the 'key' prefix.
+func numberOfSlashesFromPrefix(prefix, current art.Key) int {
+	// Remove trailing slash from prefix if present (unless it's root)
+	cleanPrefix := prefix
+	if len(prefix) > 1 && prefix[len(prefix)-1] == filepath.Separator {
+		cleanPrefix = prefix[:len(prefix)-1]
 	}
 
-	// If they're exactly the same path, return 0
-	if bytes.Equal(key, current) {
+	cleanCurrent := current
+	if len(current) > 1 && current[len(current)-1] == filepath.Separator {
+		cleanCurrent = current[:len(current)-1]
+	}
+
+	if bytes.Equal(cleanPrefix, cleanCurrent) {
 		return 0
 	}
 
-	// The case with trailing slash in the key
-	if len(key) > 0 && key[len(key)-1] == '/' {
-		// Get the remainder after the key
-		remainder := current[len(key):]
-
-		// Count slashes in the remainder
-		count := 0
-		for i := 0; i < len(remainder); i++ {
-			if remainder[i] == '/' {
-				count++
-			}
-		}
-		return count
+	if !bytes.HasPrefix(cleanCurrent, cleanPrefix) {
+		return -1
 	}
 
-	// Get the path after the prefix
-	remainder := current[len(key):]
-
-	// Count slashes in the remainder
-	count := 0
-	for i := 0; i < len(remainder); i++ {
-		if remainder[i] == '/' {
-			count++
+	trimmed := bytes.TrimPrefix(cleanCurrent, cleanPrefix)
+	paths := bytes.Split(trimmed, []byte{filepath.Separator})
+	count := len(paths)
+	for _, path := range paths {
+		if bytes.Equal(path, []byte{}) {
+			count--
 		}
 	}
 
