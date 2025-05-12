@@ -83,3 +83,11 @@ Image: nginx:latest
 │   │   ├── service/     # Core services
 │   │   └── types/       # Data models
 ```
+
+## Roadmap
+- Filesystem: Build a DNS SRV Content aware picker load balancer for gRPC
+- Server, Filesystem: Store statistics about images X layers to allow preload in priority files that ares often used
+- Server: Track Image usage
+- Server: GC of non used image or orphelin layer
+- Server, Filesystem: Use statistics to preload files that are frequently used
+- Server, Filesystem: Create a unix socket transport for local deployment (viscaufs on the node server)
